@@ -76,5 +76,19 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
   // Hint: use line_for_address from kern/dwarf_lines.c
   // LAB 2: Your code here:
 
+  buf  = &info->rip_line;
+  addr = addr - 5;
+  code = line_for_address(&addrs, addr, line_offset, buf);
+  if (code < 0) {
+    return code;
+  }
+
+  buf  = &tmp_buf;
+  code = function_by_info(&addrs, addr, offset, buf, sizeof(char *), &info->rip_fn_addr);
+  strncpy(info->rip_fn_name, tmp_buf, 256);
+  info->rip_fn_namelen = strnlen(info->rip_fn_name, 256);
+  if (code < 0) {
+    return code;
+  }
   return 0;
 }

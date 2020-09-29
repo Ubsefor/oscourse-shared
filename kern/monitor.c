@@ -1,4 +1,4 @@
-// Simple command-line kernel monitor useful for
+/// Simple command-line kernel monitor useful for
 // controlling the kernel and exploring the system interactively.
 
 #include <inc/stdio.h>
@@ -23,6 +23,7 @@ struct Command {
 static struct Command commands[] = {
     {"help", "Display this list of commands", mon_help},
     {"hello", "Display greeting message", mon_hello},
+    {"evenbeyond", "Display CPU load (test octal)", mon_evenbeyond},
     {"kerninfo", "Display information about the kernel", mon_kerninfo},
     {"backtrace", "Print stack backtrace", mon_backtrace}};
 #define NCOMMANDS (sizeof(commands) / sizeof(commands[0]))
@@ -65,8 +66,41 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf) {
 }
 
 int
+mon_evenbeyond(int argc, char **argv, struct Trapframe *tf) {
+  cprintf("My CPU load is OVER %o \n", 9000);
+  return 0;
+}
+
+int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf) {
   // LAB 2: Your code here.
+
+  uint64_t *rbp = 0x0;
+  uint64_t rip  = 0x0;
+
+  struct Ripdebuginfo info;
+
+  cprintf("Stack backtrace:\n");
+  rbp = (uint64_t *)read_rbp();
+  rip = rbp[1];
+
+  if (rbp == 0x0 || rip == 0x0) {
+    cprintf("JOS: ERR: Couldn't obtain backtrace...\n");
+    return -1;
+  }
+
+  do {
+    rip = rbp[1];
+    debuginfo_rip(rip, &info);
+
+    cprintf("  rbp %016lx  rip %016lx\n", (long unsigned int)rbp, (long unsigned int)rip);
+    cprintf("         %.256s:%d: %.*s+%ld\n", info.rip_file, info.rip_line,
+            info.rip_fn_namelen, info.rip_fn_name, (rip - info.rip_fn_addr));
+    // cprintf(" args:%d \n", info.rip_fn_narg);
+    rbp = (uint64_t *)rbp[0];
+
+  } while (rbp);
+
   return 0;
 }
 

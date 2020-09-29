@@ -78,7 +78,7 @@ struct Trapframe {
   uint16_t tf_cs;
   uint16_t tf_padding5;
   uint32_t tf_padding6;
-  uint64_t tf_rflags;
+  uint64_t tf_rflags; 
   /* below here only when crossing rings, such as from user to kernel */
   uintptr_t tf_rsp;
   uint16_t tf_ss;

@@ -125,12 +125,51 @@ envid2env(envid_t envid, struct Env **env_store, bool checkperm) {
 // they are in the envs array (i.e., so that the first call to
 // env_alloc() returns envs[0]).
 //
+
+/*
+struct Env {
+  struct Trapframe env_tf; // Saved registers
+  struct Env *env_link;    // Next free Env
+  envid_t env_id;          // Unique environment identifier
+  envid_t env_parent_id;   // env_id of this env's parent
+  enum EnvType env_type;   // Indicates special system environments
+  unsigned env_status;     // Status of the environment
+  uint32_t env_runs;       // Number of times environment has run
+};
+*/
+
 void
 env_init(void) {
-  // Set up envs array
-  // LAB 3: Your code here.
+// Set up envs array
+// LAB 3: Your code here.
+env_free_list = envs; // env_free_list = &envs[0]; ?????
+for (uint32_t i = 0; i < NENV; ++i) {
+  // envs[i].env_tf = {0};
+  envs[i].env_status = ENV_FREE;
+  if (i != NENV - 1) {
+    envs[i].env_link = &envs[i + 1];
+  } else {
+    envs[i].env_link = NULL;
+  };
+  envs[i].env_type = ENV_TYPE_KERNEL;
+  envs[i].env_id = 0;
+  envs[i].env_parent_id = 0;
+
   
 }
+
+env_init_percpu();
+  
+  
+  //https://ru.wikipedia.org/wiki/%D0%AD%D0%BA%D1%81%D1%82%D1%80%D0%B5%D0%BC%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%B5_%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5#%D0%9F%D0%B0%D1%80%D0%BD%D0%BE%D0%B5_%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5
+  
+}
+
+void load_icode(); 
+
+void env_create();
+
+void env_run();
 
 // Load GDT and segment descriptors.
 void

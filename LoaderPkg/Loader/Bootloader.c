@@ -114,8 +114,8 @@ InitGraphics (
   // Hint: Use GetMode/SetMode functions.
   //
 
-  UINT32 DefinedWidth  = 1600U;
-  UINT32 DefinedHeight = 900U;
+  UINT32 DefinedWidth  = 1280U;
+  UINT32 DefinedHeight = 720U;
   UINT32 MaxModeNumber = -1U;
   
   for ( UINT32 i = 0; i < GraphicsOutput->Mode->MaxMode; i++ ){

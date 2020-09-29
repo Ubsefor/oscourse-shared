@@ -6,6 +6,7 @@
 #include <inc/x86.h>
 
 #include <kern/kdebug.h>
+#include <kern/env.h>
 #include <inc/uefi.h>
 
 void
@@ -75,14 +76,13 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
   // address of the next instruction, so we should substract 5 from it.
   // Hint: use line_for_address from kern/dwarf_lines.c
   // LAB 2: Your code here:
-
   buf  = &info->rip_line;
   addr = addr - 5;
   code = line_for_address(&addrs, addr, line_offset, buf);
   if (code < 0) {
-    return code;
+    return 0;
   }
-
+  
   buf  = &tmp_buf;
   code = function_by_info(&addrs, addr, offset, buf, sizeof(char *), &info->rip_fn_addr);
   strncpy(info->rip_fn_name, tmp_buf, 256);
@@ -92,3 +92,14 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
   }
   return 0;
 }
+
+uintptr_t
+find_function(const char *const fname) {
+  // There are two functions for function name lookup.
+  // address_by_fname, which looks for function name in section .debug_pubnames
+  // and naive_address_by_fname which performs full traversal of DIE tree.
+  // LAB 3: Your code here
+
+  return 0;
+}
+  

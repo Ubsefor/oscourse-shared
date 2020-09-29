@@ -12,8 +12,9 @@ enum {
   E_NO_MEM      = 4, // Request failed due to memory shortage
   E_NO_FREE_ENV = 5, // Attempt to create a new environment beyond
                      // the maximum allowed
-  E_BAD_DWARF = 6,   // Incorrect DWARF debug information
-  E_FAULT     = 7,   // Memory fault
+  E_BAD_DWARF   = 6, // Incorrect DWARF debug information
+  E_FAULT       = 7, // Memory fault
+  E_INVALID_EXE = 8, // Invalid executable
 
   MAXERROR
 };

@@ -16,5 +16,6 @@ struct Ripdebuginfo {
 };
 
 int debuginfo_rip(uintptr_t eip, struct Ripdebuginfo *info);
+uintptr_t find_function(const char *const fname);
 
 #endif

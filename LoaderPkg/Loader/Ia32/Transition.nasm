@@ -91,14 +91,14 @@ ASM_PFX(CallKernelThroughGateAsm):
 
     ; 1. Disable paging.
     ; LAB 2: Your code here:
-    
+
     mov  ecx, CR0
     btr  ecx, 31
     mov  CR0, ecx
     
     ; 2. Switch to our GDT that supports 64-bit mode and update CS to LINEAR_CODE_SEL.
     ; LAB 2: Your code here:
-    
+
     lgdt [GDT_DESCRIPTOR]
     jmp LINEAR_CODE_SEL:AsmWithOurGdt
 
@@ -106,7 +106,7 @@ AsmWithOurGdt:
 
     ; 3. Reset all the data segment registers to linear mode (LINEAR_DATA_SEL).
     ; LAB 2: Your code here:
-    
+
     mov eax, LINEAR_DATA_SEL
     mov ds, ax
     mov ss, ax
@@ -123,7 +123,7 @@ AsmWithOurGdt:
     bts ecx, 7
     mov CR4, ecx
 
-    ; 5. Update page table address register (CR3) right away with the supplied PAGE_TABLE.
+    ; 5. Update page table address register (C3) right away with the supplied PAGE_TABLE.
     ; This does nothing as paging is off at the moment as paging is disabled.
     ; LAB 2: Your code here:
     
@@ -132,7 +132,7 @@ AsmWithOurGdt:
 
     ; 6. Enable long mode (LME) and execute protection (NXE) via the EFER MSR register.
     ; LAB 2: Your code here:
-    
+
     mov ecx, 0xC0000080
     
     ; EDX:EAX <- MSR[ECX]
@@ -151,7 +151,7 @@ AsmWithOurGdt:
     bts ecx, 16
     bts ecx, 1
     mov CR0, ecx
-    
+
     ; 8. Transition to 64-bit mode by updating CS with LINEAR_CODE64_SEL.
     ; LAB 2: Your code here:
     

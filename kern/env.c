@@ -1,5 +1,11 @@
 /* See COPYRIGHT for copyright information. */
 
+
+/*
+ ВНИМАНИЕ! ЕСЛИ В ЧЕМ ТО РАЗОБРАЛИСЬ – ПИШИТЕ КОММЕНТАРИИ
+ СПАСИБО ЗА ВНИМАНИЕ!))))))))))))))))))))))))))))))))))))
+*/
+
 #include <inc/x86.h>
 #include <inc/mmu.h>
 #include <inc/error.h>
@@ -7,11 +13,11 @@
 #include <inc/assert.h>
 #include <inc/elf.h>
 
-#include <kern/env.h>
+#include <kern/env.h> 
 #include <kern/trap.h>
 #include <kern/monitor.h>
 #include <kern/sched.h>
-#include <kern/cpu.h>
+#include <kern/cpu.h> 
 #include <kern/kdebug.h>
 
 struct Env env_array[NENV];
@@ -38,7 +44,10 @@ extern unsigned int bootstacktop;
 // In particular, the last argument to the SEG macro used in the
 // definition of gdt specifies the Descriptor Privilege Level (DPL)
 // of that descriptor: 0 for kernel and 3 for user.
+
 //
+// Вот эта дичь крайне похожа на ACPI методы по работе с процессором
+
 struct Segdesc gdt[2 * NCPU + 7] =
     {
         // 0x0 - unused (always faults -- for trapping NULL far pointers)
@@ -126,7 +135,9 @@ envid2env(envid_t envid, struct Env **env_store, bool checkperm) {
 void
 env_init(void) {
   // Set up envs array
-  // LAB 3: Your code here.
+  // LAB 3: Your code here.Pernel kakic
+
+  
 }
 
 // Load GDT and segment descriptors.

@@ -2,7 +2,7 @@
 ; Copyright (c) 2020, ISP RAS. All rights reserved.
 ; SPDX-License-Identifier: BSD-3-Clause
 
-bits 32
+bits 32 
 
 SECTION .text
     align 4

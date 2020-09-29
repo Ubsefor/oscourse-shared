@@ -1,18 +1,11 @@
 /* See COPYRIGHT for copyright information. */
 
-
-/*
- ВНИМАНИЕ! ЕСЛИ В ЧЕМ ТО РАЗОБРАЛИСЬ – ПИШИТЕ КОММЕНТАРИИ
- СПАСИБО ЗА ВНИМАНИЕ!))))))))))))))))))))))))))))))))))))
-*/
-
 #include <inc/x86.h>
 #include <inc/mmu.h>
 #include <inc/error.h>
 #include <inc/string.h>
 #include <inc/assert.h>
 #include <inc/elf.h>
-
 #include <kern/env.h> 
 #include <kern/trap.h>
 #include <kern/monitor.h>
@@ -135,8 +128,7 @@ envid2env(envid_t envid, struct Env **env_store, bool checkperm) {
 void
 env_init(void) {
   // Set up envs array
-  // LAB 3: Your code here.Pernel kakic
-
+  // LAB 3: Your code here.
   
 }
 

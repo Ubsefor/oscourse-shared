@@ -24,6 +24,23 @@ sched_yield(void) {
   // below to halt the cpu.
 
   // LAB 3: Your code here.
+  struct Env * envs_end = envs + NENV - 1;
+  struct Env * e = curenv;
+  while ((e != envs_end) && (e->env_status == ENV_RUNNABLE)) {
+    e++;
+  }
+  if (e->env_status != ENV_RUNNABLE) {
+    e = envs;
+    while ((e->env_status != ENV_RUNNABLE) &&
+          (e->env_status != ENV_RUNNING) && (e != curenv)) {
+        e++;
+    }
+  }
+  if (e->env_status == ENV_RUNNABLE) {
+    env_run(e);
+  } else if (e->env_status != ENV_RUNNING) {
+    sched_halt();
+  }
 }
 
 // Halt this CPU when there is nothing to do. Wait until the

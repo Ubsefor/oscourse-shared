@@ -142,7 +142,6 @@ void
 env_init(void) {
 // Set up envs array
 // LAB 3: Your code here.
-  static int STACK_TOP = 0x2000000;
   env_free_list = envs; // env_free_list = &envs[0]; ?????
   for (uint32_t i = 0; i < NENV; ++i) {
     envs[i].env_status = ENV_FREE;
@@ -157,7 +156,6 @@ env_init(void) {
     envs[i].env_tf = (const struct Trapframe){ 0 };
     envs[i].env_tf.tf_rflags = read_rflags();
     envs[i].env_runs = 0;
-    envs[i].env_tf.tf_rsp = STACK_TOP + i * 4 * PGSIZE;
   }
   env_init_percpu();
 };
@@ -237,14 +235,16 @@ env_alloc(struct Env **newenv_store, envid_t parent_id) {
   e->env_tf.tf_es = GD_KD | 0;
   e->env_tf.tf_ss = GD_KD | 0;
   e->env_tf.tf_cs = GD_KT | 0;
-
+  
   // LAB 3: Your code here.
-  // static int STACK_TOP = 0x2000000;
+  static int STACK_TOP = 0x2000000;
+  e->env_tf.tf_rsp = STACK_TOP - (e - envs) * 2 * PGSIZE;
 #else
+
 #endif
   // You will set e->env_tf.tf_rip later.
 
-  // commit the allocation
+  // commit the allocation 
   env_free_list = e->env_link;
   *newenv_store = e;
 
@@ -258,6 +258,37 @@ static void
 bind_functions(struct Env *e, struct Elf *elf) {
   //find_function from kdebug.c should be used
   // LAB 3: Your code here.
+  struct Elf64_Sym *symtab, *esymtab;
+	struct Secthdr *sh, *esh;
+	char *shstrtab, *strtab;
+	uintptr_t fn_ptr;
+    
+	sh = (struct Secthdr *) ((uint8_t *) elf + elf->e_shoff);
+	esh = sh + elf->e_shnum;
+	symtab = NULL;
+	esymtab = NULL;
+	strtab = NULL;
+    //find tabs
+	shstrtab = (char *) ((uint8_t *) elf + sh[elf->e_shstrndx].sh_offset);
+
+	for (; sh < esh; ++sh) {
+		if (sh->sh_type == ELF_SHT_SYMTAB) {
+			symtab = (struct Elf64_Sym *) ((uint8_t *) elf + sh->sh_offset);
+			esymtab = (struct Elf64_Sym *) ((uint8_t *) symtab + sh->sh_size);
+		} else if (sh->sh_type == ELF_SHT_STRTAB && !strcmp(".strtab", shstrtab + sh->sh_name)) {
+			strtab = (char *) elf + sh->sh_offset;
+		}
+	}	
+	if (!symtab || !esymtab || !strtab) {
+		return;
+	}
+	for (; symtab < esymtab; ++symtab) {
+		if (ELF64_ST_BIND(symtab->st_info) == 1) {
+			if ((fn_ptr = find_function(strtab + symtab->st_name))) {
+				*((uint32_t *) symtab->st_value) = fn_ptr;
+			}
+		}
+	}
 }
 #endif
 
@@ -327,15 +358,27 @@ load_icode(struct Env *e, uint8_t *binary) {
   //
   // LAB 3: Your code here.
   
-  //uint16_t shnum = ((struct Elf*)binary )->e_shnum;
-  //uint16_t shentsize = ((struct Elf*)binary )->e_shentsize;
-  //uint64_t entry = ((struct Elf*)binary )->e_entry; //env_run() and env_pop_tf()?????
-  // uint64_t program_header_table_size = ((struct Elf*)binary )->e_phnum * ((struct Elf*)binary )->e_phentsize;
-  //вычисляем размер program_header_table умножив количество записей на их размер
-  //тк это Loadable ELF file, Program header table присутствует обязательно
+  uint64_t entry = ((struct Elf*)binary)->e_entry;
+  // pnum is the number of header entries
+  uint16_t phnum = ((struct Elf*)binary)->e_phnum;
+  uint8_t *pht_start = binary + ((struct Elf*)binary)->e_phoff;
+  struct Proghdr *ph = (struct Proghdr *)pht_start;
 
+  //
+  // We need to cycle through phnum entries from Program header table, that has an offset of e_phoff
+  // Program header table is always present as this is a Loadable ELF file
+  //
+  for (uint16_t i = 0; i < phnum; i++) {
+    if (ph->p_type != ELF_PROG_LOAD)
+      continue;
+    memmove((void *)ph->p_va, binary + ph->p_offset, ph->p_filesz);
+    memset((void *)(ph->p_va + ph->p_filesz), 0, ph->p_memsz - ph->p_filesz);
+    ph++;
+  }
+
+  //Set the rip register value to entry
+  e->env_tf.tf_rip = entry;
   
-
 }
 
 //
@@ -348,6 +391,14 @@ load_icode(struct Env *e, uint8_t *binary) {
 void
 env_create(uint8_t *binary, enum EnvType type) {
   // LAB 3: Your code here.
+  struct Env *e;
+
+  int status = env_alloc(&e, 0);
+  if (status == -E_NO_FREE_ENV || status == -E_NO_FREE_ENV)
+    panic("env_alloc: %i", status);
+
+  load_icode(e, binary);
+  e->env_type = type;
 }
 
 //
@@ -375,11 +426,20 @@ env_destroy(struct Env *e) {
   // If e is currently running on other CPUs, we change its state to
   // ENV_DYING. A zombie environment will be freed the next time
   // it traps to the kernel.
+
+  env_free(e);
+  if (e == curenv)
+	  sched_yield();
+	// cprintf("Destroyed the only environment - nothing more to do!\n");
+	// while (1)
+	// monitor(NULL);
+  
 }
 
 #ifdef CONFIG_KSPACE
 void
 csys_exit(void) {
+
   env_destroy(curenv);
 }
 
@@ -452,7 +512,7 @@ env_pop_tf(struct Trapframe *tf) {
 //
 // Context switch from curenv to env e.
 // Note: if this is the first call to env_run, curenv is NULL.
-//
+// 
 // This function does not return.
 //
 void
@@ -481,6 +541,10 @@ env_run(struct Env *e) {
   //
   // LAB 3: Your code here.
   
-  
-  while(1) {}
+  if (curenv && curenv->env_status == ENV_RUNNING)
+    curenv->env_status = ENV_RUNNABLE;
+  curenv = e;
+  e->env_status = ENV_RUNNING;
+  e->env_runs++;
+  env_pop_tf(&e->env_tf);
 }

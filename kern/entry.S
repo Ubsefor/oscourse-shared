@@ -72,7 +72,7 @@ _generall_syscall:
 .globl sys_yield
 .type  sys_yield, @function
 sys_yield:
-  call _generall_syscall
+  call _generall_syscall 
   call csys_yield
   jmp .
 
@@ -80,7 +80,6 @@ sys_yield:
 .globl sys_exit
 .type  sys_exit, @function
 sys_exit:
-  call _generall_syscall
   call csys_exit
   jmp .
 #endif

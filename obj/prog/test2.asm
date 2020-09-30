@@ -1,5 +1,5 @@
 
-obj/prog/test2:     file format elf64-x86-64
+obj/prog//test2:     file format elf64-x86-64
 
 
 Disassembly of section .text:

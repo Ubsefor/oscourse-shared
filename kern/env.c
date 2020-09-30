@@ -142,34 +142,25 @@ void
 env_init(void) {
 // Set up envs array
 // LAB 3: Your code here.
-env_free_list = envs; // env_free_list = &envs[0]; ?????
-for (uint32_t i = 0; i < NENV; ++i) {
-  // envs[i].env_tf = {0};
-  envs[i].env_status = ENV_FREE;
-  if (i != NENV - 1) {
-    envs[i].env_link = &envs[i + 1];
-  } else {
-    envs[i].env_link = NULL;
-  };
-  envs[i].env_type = ENV_TYPE_KERNEL;
-  envs[i].env_id = 0;
-  envs[i].env_parent_id = 0;
-
-  
-}
-
-env_init_percpu();
-  
-  
-  //https://ru.wikipedia.org/wiki/%D0%AD%D0%BA%D1%81%D1%82%D1%80%D0%B5%D0%BC%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%B5_%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5#%D0%9F%D0%B0%D1%80%D0%BD%D0%BE%D0%B5_%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5
-  
-}
-
-void load_icode(); 
-
-void env_create();
-
-void env_run();
+  static int STACK_TOP = 0x2000000;
+  env_free_list = envs; // env_free_list = &envs[0]; ?????
+  for (uint32_t i = 0; i < NENV; ++i) {
+    envs[i].env_status = ENV_FREE;
+    if (i != NENV - 1) {
+      envs[i].env_link = &envs[i + 1];
+    } else {
+      envs[i].env_link = NULL;
+    };
+    envs[i].env_type = ENV_TYPE_KERNEL;
+    envs[i].env_id = 0;
+    envs[i].env_parent_id = 0;
+    envs[i].env_tf = (const struct Trapframe){ 0 };
+    envs[i].env_tf.tf_rflags = read_rflags();
+    envs[i].env_runs = 0;
+    envs[i].env_tf.tf_rsp = STACK_TOP + i * 4 * PGSIZE;
+  }
+  env_init_percpu();
+};
 
 // Load GDT and segment descriptors.
 void
@@ -311,7 +302,40 @@ load_icode(struct Env *e, uint8_t *binary) {
   //  to make sure that the environment starts executing there.
   //  What?  (See env_run() and env_pop_tf() below.)
 
+  /*
+  struct Elf {
+  UINT32 e_magic;       // must equal ELF_MAGIC
+  UINT8  e_elf[12];
+  UINT16 e_type;
+  UINT16 e_machine;
+  UINT32 e_version;
+  UINT64 e_entry;
+  UINT64 e_phoff;
+  UINT64 e_shoff;
+  UINT32 e_flags;
+  UINT16 e_ehsize;
+  UINT16 e_phentsize;
+  UINT16 e_phnum;
+  UINT16 e_shentsize;
+  UINT16 e_shnum;
+  UINT16 e_shstrndx;
+};
+  */
+
+  //
+  // atishay-jain.all-autocomplete
+  //
   // LAB 3: Your code here.
+  
+  //uint16_t shnum = ((struct Elf*)binary )->e_shnum;
+  //uint16_t shentsize = ((struct Elf*)binary )->e_shentsize;
+  //uint64_t entry = ((struct Elf*)binary )->e_entry; //env_run() and env_pop_tf()?????
+  uint64_t program_header_table_size = ((struct Elf*)binary )->e_phnum * ((struct Elf*)binary )->e_phentsize;
+  //вычисляем размер program_header_table умножив количество записей на их размер
+  //тк это Loadable ELF file, Program header table присутствует обязательно
+
+  
+
 }
 
 //
@@ -456,5 +480,7 @@ env_run(struct Env *e) {
   //	e->env_tf to sensible values.
   //
   // LAB 3: Your code here.
+  
+  
   while(1) {}
 }

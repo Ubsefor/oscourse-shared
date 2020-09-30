@@ -330,7 +330,7 @@ load_icode(struct Env *e, uint8_t *binary) {
   //uint16_t shnum = ((struct Elf*)binary )->e_shnum;
   //uint16_t shentsize = ((struct Elf*)binary )->e_shentsize;
   //uint64_t entry = ((struct Elf*)binary )->e_entry; //env_run() and env_pop_tf()?????
-  uint64_t program_header_table_size = ((struct Elf*)binary )->e_phnum * ((struct Elf*)binary )->e_phentsize;
+  // uint64_t program_header_table_size = ((struct Elf*)binary )->e_phnum * ((struct Elf*)binary )->e_phentsize;
   //вычисляем размер program_header_table умножив количество записей на их размер
   //тк это Loadable ELF file, Program header table присутствует обязательно
 

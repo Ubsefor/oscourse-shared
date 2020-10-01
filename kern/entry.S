@@ -72,7 +72,7 @@ _generall_syscall:
 .globl sys_yield
 .type  sys_yield, @function
 sys_yield:
-  call _generall_syscall 
+  call _generall_syscall
   call csys_yield
   jmp .
 
@@ -80,8 +80,10 @@ sys_yield:
 .globl sys_exit
 .type  sys_exit, @function
 sys_exit:
+  leaq bootstacktop(%rip),%rsp # в rsp загружаем адрес(leaq) bootstacktop относительно rip
+  xor %ebp, %ebp # снова зануляем регистр (xor одинаковых значений). % означает, что это имя регистра
   call csys_exit
-  jmp .
+jmp .
 #endif
 
 .data

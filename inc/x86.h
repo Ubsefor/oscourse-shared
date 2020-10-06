@@ -305,4 +305,16 @@ xchg(volatile uint32_t *addr, uint32_t newval) {
   return result;
 }
 
+#define NMI_LOCK 0x80
+
+static inline void
+nmi_enable(void) {
+  outb(0x70, inb(0x70) & ~NMI_LOCK);
+}
+
+static inline void
+nmi_disable(void) {
+  outb(0x70, inb(0x70) | NMI_LOCK);
+}
+
 #endif /* !JOS_INC_X86_H */

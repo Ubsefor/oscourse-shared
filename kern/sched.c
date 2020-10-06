@@ -25,23 +25,16 @@ sched_yield(void) {
 
   // LAB 3: Your code here.
 
-  // If no current environment,
-  // start scanning from the beginning of array
-  int id   = curenv ? ENVX(curenv_getid()) : -1;
+  int id   = curenv ? ENVX( curenv_getid() ) : -1; // check if env available
   int orig = id;
 
   do {
-    id = (id + 1) % NENV; // id ∈ [0; кол-во процессов]
-    if (envs[id].env_status == ENV_RUNNABLE || 
-        (id == orig && envs[id].env_status == ENV_RUNNING)) {
-      // Found suitable environment to run
-      env_run(envs + id);  // envs - массив => envs + id - нужный элемент массива
+    id = ( id + 1 ) % NENV;
+    if ( envs[id].env_status == ENV_RUNNABLE || ( id == orig && envs[id].env_status == ENV_RUNNING ) ) {
+      env_run( envs + id );  // found env -> add
     }
   } while (id != orig);
-
-  // No runnable environments,
-  // so just halt the cpu
-  sched_halt();
+  sched_halt(); // nothing to do -> halt
 }
 
 // Halt this CPU when there is nothing to do. Wait until the

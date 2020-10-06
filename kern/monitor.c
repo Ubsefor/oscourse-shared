@@ -67,8 +67,8 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf) {
 }
 
 int
-mon_evenbeyond(int argc, char **argv, struct Trapframe *tf) {
-  cprintf("My CPU load is OVER %o \n", 9000);
+mon_evenbeyond( int argc, char **argv, struct Trapframe *tf ) {
+  cprintf( "My CPU load is OVER %o \n", 9000 );
   return 0;
 }
 
@@ -80,25 +80,25 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf) {
   uint64_t rip  = 0x0;
 
   struct Ripdebuginfo info;
-
-  cprintf("Stack backtrace:\n");
-  rbp = (uint64_t *)read_rbp();
+ 
+  cprintf( "Stack backtrace:\n" );
+  rbp = (uint64_t *) read_rbp();
   rip = rbp[1];
 
-  if (rbp == 0x0 || rip == 0x0) {
-    cprintf("JOS: ERR: Couldn't obtain backtrace...\n");
+  if ( rbp == 0x0 || rip == 0x0 ) {
+    cprintf( "JOS: ERR: Couldn't obtain backtrace...\n" );
     return -1;
   }
 
   do {
     rip = rbp[1];
-    debuginfo_rip(rip, &info);
+    debuginfo_rip( rip, &info );
 
-    cprintf("  rbp %016lx  rip %016lx\n", (long unsigned int)rbp, (long unsigned int)rip);
+    cprintf("  rbp %016lx  rip %016lx\n", (long unsigned int) rbp, (long unsigned int) rip );
     cprintf("         %.256s:%d: %.*s+%ld\n", info.rip_file, info.rip_line,
-            info.rip_fn_namelen, info.rip_fn_name, (rip - info.rip_fn_addr));
+            info.rip_fn_namelen, info.rip_fn_name, ( rip - info.rip_fn_addr ) );
     // cprintf(" args:%d \n", info.rip_fn_narg);
-    rbp = (uint64_t *)rbp[0];
+    rbp = (uint64_t *) rbp[0];
 
   } while (rbp);
 

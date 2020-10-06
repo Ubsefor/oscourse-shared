@@ -37,7 +37,7 @@ extern unsigned int bootstacktop;
 //
 // In particular, the last argument to the SEG macro used in the
 // definition of gdt specifies the Descriptor Privilege Level (DPL)
-// of that descriptor: 0 for ernel and 3 for user.
+// of that descriptor: 0 for kernel and 3 for user.
 //
 struct Segdesc gdt[2 * NCPU + 7] =
     {
@@ -128,13 +128,14 @@ env_init(void) {
   // Set up envs array
   // LAB 3: Your code here.
 
-  env_free_list = NULL; // NULLing new env_list 
-  for (int i = NENV - 1; i >= 0; i--) { 
-    // initialization in for loop every new environment till max env met
+  env_free_list = NULL; // null new arr of envs
+
+  for (int i = NENV - 1; i >= 0; i--) { // the de-facto initialization
     envs[i].env_link = env_free_list;
     envs[i].env_id   = 0;
     env_free_list    = &envs[i];
   }
+  env_init_percpu();
 }
 
 // Load GDT and segment descriptors.
@@ -215,12 +216,12 @@ env_alloc(struct Env **newenv_store, envid_t parent_id) {
 
   // LAB 3: Your code here.
   // Allocate stack for new task
-  static uintptr_t STACK_TOP = 0x2000000;
-  e->env_tf.tf_rsp = STACK_TOP;
-  STACK_TOP -= 2 * PGSIZE;
 
-  // For now init trapframe with current RFLAGS
-  e->env_tf.tf_rflags = read_rflags();
+  static uintptr_t STACK_TOP = 0x2000000; // basic stack pointer given us by exercise
+  e->env_tf.tf_rsp = STACK_TOP;
+  STACK_TOP -= 2 * PGSIZE; // stack goes brr
+
+  e->env_tf.tf_rflags = read_rflags(); // init tf with cur rflags
 #else
 #endif
   // You will set e->env_tf.tf_rip later.
@@ -229,7 +230,7 @@ env_alloc(struct Env **newenv_store, envid_t parent_id) {
   env_free_list = e->env_link;
   *newenv_store = e;
 
-  cprintf("[%08x] new env %08x\n", curenv ? curenv->env_id : 0, e->env_id);
+  cprintf( "[%08x] new env %08x\n", curenv ? curenv->env_id : 0, e->env_id );
 
   return 0;
 }
@@ -240,36 +241,34 @@ bind_functions(struct Env *e, uint8_t *binary) {
   //find_function from kdebug.c should be used
   // LAB 3: Your code here.
 
-  struct Elf *elf    = (struct Elf *)binary;
-  struct Secthdr *sh = (struct Secthdr *)(binary + elf->e_shoff);
-  const char *shstr  = (char *)binary + sh[elf->e_shstrndx].sh_offset;
+  // new necessary vars from ELF docs
+  struct Elf *elf    = (struct Elf *) binary;
+  struct Secthdr *sh = (struct Secthdr *) ( binary + elf->e_shoff );
+  const char *shstr  = (char *) binary + sh[elf->e_shstrndx].sh_offset;
 
-  // Find string table
+  // find string table
   size_t strtab = -1UL;
-  for (size_t i = 0; i < elf->e_shnum; i++) {
-    if (sh[i].sh_type == ELF_SHT_STRTAB && !strcmp(".strtab", shstr + sh[i].sh_name)) {
+  for ( size_t i = 0; i < elf->e_shnum; i++ ) {
+    if ( sh[i].sh_type == ELF_SHT_STRTAB && !strcmp( ".strtab", shstr + sh[i].sh_name ) ) {
       strtab = i;
       break;
     }
   }
-  const char *strings = (char *)binary + sh[strtab].sh_offset;
+  const char *strings = (char *) binary + sh[strtab].sh_offset;
 
-  for (size_t i = 0; i < elf->e_shnum; i++) {
-    if (sh[i].sh_type == ELF_SHT_SYMTAB) {
-      struct Elf64_Sym *syms = (struct Elf64_Sym *)(binary + sh[i].sh_offset);
-
+  for ( size_t i = 0; i < elf->e_shnum; i++ ) {
+    if ( sh[i].sh_type == ELF_SHT_SYMTAB ) {
+      struct Elf64_Sym *syms = (struct Elf64_Sym *) ( binary + sh[i].sh_offset );
       size_t nsyms = sh[i].sh_size / sizeof(*syms);
 
-      for (size_t j = 0; j < nsyms; j++) {
-        // Only handle symbols that we know how to bind
-        if (ELF64_ST_BIND(syms[j].st_info) == STB_GLOBAL &&
-            ELF64_ST_TYPE(syms[j].st_info) == STT_OBJECT &&
-            syms[j].st_size == sizeof(void *)) {
+      for ( size_t j = 0; j < nsyms; j++ ) {
+        if ( ELF64_ST_BIND(syms[j].st_info) == STB_GLOBAL && ELF64_ST_TYPE(syms[j].st_info) == STT_OBJECT &&
+              syms[j].st_size == sizeof(void *) ) { // handle these symbols, that are ELF
           const char *name = strings + syms[j].st_name;
-          uintptr_t addr = find_function(name);
+          uintptr_t addr = find_function( name );
 
           if (addr) {
-            memcpy((void *)syms[j].st_value, &addr, sizeof(void *));
+            memcpy( (void *) syms[j].st_value, &addr, sizeof(void *) );
           }
         }
       }
@@ -320,33 +319,32 @@ load_icode(struct Env *e, uint8_t *binary) {
   //  What?  (See env_run() and env_pop_tf() below.)
 
   // LAB 3: Your code here.
-  // AHTUNG: из чего состоит Elf и Proghdr смотри в Elf64.h. Elf - это структура выполняемого фаила
-  struct Elf *elf = (struct Elf *)binary; // binary приодится к типу указателя на структуру ELF
-  if (elf->e_magic != ELF_MAGIC) {
-    cprintf("Unexpected ELF format\n");
+  struct Elf *elf = ( struct Elf * )binary;
+  if ( elf->e_magic != ELF_MAGIC ) { // doing some checks for wizardy
+    cprintf( "ERR: JOS: Unexpected exec format!\n" );
     return;
   }
 
-struct Proghdr *ph = (struct Proghdr *)(binary + elf->e_phoff); // Proghdr = prog header. Он лежит со смещением elf->e_phoff относительно начала фаила
+  struct Proghdr *ph = (struct Proghdr *) ( binary + elf->e_phoff ); // program header
 
-  for (size_t i = 0; i < elf->e_phnum; i++) { //elf->e_phnum - Число заголовков программы. Если у файла нет таблицы заголовков программы, это поле содержит 0.
-    if (ph[i].p_type == ELF_PROG_LOAD) {
+  for (size_t i = 0; i < elf->e_phnum; i++) { // init the prog env
+    if ( ph[i].p_type == ELF_PROG_LOAD ) {
 
       void *src = binary + ph[i].p_offset;
-      void *dst = (void *)ph[i].p_va;
+      void *dst = (void *) ph[i].p_va;
 
       size_t memsz  = ph[i].p_memsz;
-      size_t filesz = MIN(ph[i].p_filesz, memsz);
+      size_t filesz = MIN( ph[i].p_filesz, memsz );
 
-      memcpy(dst, src, filesz);                // копируем в dst (дистинейшн) src (код) размера filesz
-      memset(dst + filesz, 0, memsz - filesz); // обнуление памяти по адресу dst + filesz, где количество нулей = memsz - filesz. Т.е. зануляем всю выделенную память сегмента кода, оставшуюяся после копирования src. Возможно, эта строка не нужна
+      memcpy( dst, src, filesz );
+      memset( dst + filesz, 0, memsz - filesz );
     }
+  }
 
-    e->env_tf.tf_rip = elf->e_entry; //Виртуальный адрес точки входа, которому система передает управление при запуске процесса. в регистр rip записываем адрес точки входа для выполнения процесса
+  e->env_tf.tf_rip = elf->e_entry;
+  bind_functions( e, binary ); // launching actual code
+}
 
-    bind_functions(e, binary); // Вызывается bind_functions, который связывает все что мы сделали выше (инициализация среды) с "кодом" самого процесса
-  };
-};
 //
 // Allocates a new env with env_alloc, loads the named elf
 // binary into it with load_icode, and sets its env_type.
@@ -355,29 +353,28 @@ struct Proghdr *ph = (struct Proghdr *)(binary + elf->e_phoff); // Proghdr = pro
 // The new env's parent ID is set to 0.
 //
 void
-env_create(uint8_t *binary, enum EnvType type){
+env_create( uint8_t *binary, enum EnvType type ) {
   // LAB 3: Your code here.
 
-  struct Env *newenv; 
-  if (env_alloc(&newenv, 0) < 0) {
-    panic("Can't allocate new environment");  // попытка выделить среду – если нет – вылет по панике ядра
+  struct Env *newenv;
+  if ( env_alloc( &newenv, 0 ) < 0) {
+    panic( "Can't allocate new environment" ); // test the allocation
   }
-  
+
   newenv->env_type = type;
 
-  load_icode(newenv, binary); // load instruction code
+  load_icode( newenv, binary );
 }
 
 //
 // Frees env e and all memory it uses.
 //
 void
-env_free(struct Env *e) {
-  // Note the environment's demise.
-  cprintf("[%08x] free env %08x\n", curenv ? curenv->env_id : 0, e->env_id);
+env_free( struct Env *e ) {
+  
+  cprintf( "[%08x] free env %08x\n", curenv ? curenv->env_id : 0, e->env_id ); 
 
-  // return the environment to the free list
-  e->env_status = ENV_FREE;
+  e->env_status = ENV_FREE; // return env to the free list
   e->env_link   = env_free_list;
   env_free_list = e;
 }
@@ -394,10 +391,10 @@ env_destroy(struct Env *e) {
   // ENV_DYING. A zombie environment will be freed the next time
   // it traps to the kernel.
 
-  e->env_status = ENV_DYING; // environment died, long live new environment (not here)!
+  e->env_status = ENV_DYING; // finish him!
   if (e == curenv) {
-    env_free(e); // очистка среды
-    sched_yield(); // вызывается функция, обрабатывающая смену/удаление среды
+    env_free(e); 
+    sched_yield(); // fatality by freeing env
   }
 }
 
@@ -425,6 +422,7 @@ env_pop_tf(struct Trapframe *tf) {
 #ifdef CONFIG_KSPACE
   static uintptr_t rip = 0;
   rip                  = tf->tf_rip;
+  tf->tf_rflags &= ~FL_IF;
 
   asm volatile(
       "movq %c[rbx](%[tf]), %%rbx \n\t"
@@ -446,6 +444,7 @@ env_pop_tf(struct Trapframe *tf) {
       "pushq %c[rflags](%[tf])\n\t"
       "movq %c[rax](%[tf]), %%rax\n\t"
       "popfq\n\t"
+      "sti\n\t"
       "ret\n\t"
       :
       : [ tf ] "a"(tf),
@@ -504,23 +503,25 @@ env_run(struct Env *e) {
   //
   // LAB 3: Your code here.
 
-  if (curenv) {  // if curenv == False, значит, какого-нибудь исполняемого процесса нет
-    if (curenv->env_status == ENV_DYING) { // если процесс стал зомби
-      struct Env *old = curenv;  // ставим старый адрес
-      env_free(curenv);  // самурай запятнал свой env – убираем его в ножны дабы стереть кровь
-      if (old == e) { // e - аргумент функции, который к нам пришел
-        sched_yield();  // переключение системными вызовами 
+  if (curenv) {
+    if ( curenv->env_status == ENV_DYING ) { // zombie?
+      struct Env *old = curenv;
+
+      env_free( curenv );
+      if ( old == e ) {
+        sched_yield();
       }
-    } else if (curenv->env_status == ENV_RUNNING) { // если процесс можем запустить
-      curenv->env_status = ENV_RUNNABLE;  // запускаем процесс
+
+    } else if (curenv->env_status == ENV_RUNNING) {
+      curenv->env_status = ENV_RUNNABLE;
     }
   }
-  
-  curenv = e;  // текущая среда – е
-  curenv->env_status = ENV_RUNNING; // устанавливаем статус среды на "выполняется"
-  curenv->env_runs++; // обновляем количество запусков контекста процесса
 
-  env_pop_tf(&curenv->env_tf); // восстанавливаем из curen все переменные окружения
-  
+  curenv             = e;   // this is normal condidions
+  curenv->env_status = ENV_RUNNING;
+  curenv->env_runs++;
+
+  env_pop_tf(&curenv->env_tf);
+
   while(1) {}
 }

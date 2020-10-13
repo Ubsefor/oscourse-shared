@@ -7,13 +7,47 @@
 #include <inc/memlayout.h>
 
 #include <kern/monitor.h>
+#include <kern/tsc.h>
 #include <kern/console.h>
 #include <kern/env.h>
+#include <kern/timer.h>
 #include <kern/trap.h>
 #include <kern/sched.h>
 #include <kern/cpu.h>
 #include <kern/picirq.h>
 #include <kern/kclock.h>
+
+void
+timers_init(void) {
+  timertab[0] = timer_rtc;
+  timertab[1] = timer_pit;
+  timertab[2] = timer_acpipm;
+  timertab[3] = timer_hpet0;
+  timertab[4] = timer_hpet1;
+
+  for (int i = 0; i < MAX_TIMERS; i++) {
+    if (timertab[i].timer_init != NULL) {
+      timertab[i].timer_init();
+    }
+  }
+}
+
+void
+timers_schedule(const char *name) {
+  for (int i = 0; i < MAX_TIMERS; i++) {
+    if (timertab[i].timer_name != NULL && strcmp(timertab[i].timer_name, name) == 0) {
+      if (timertab[i].enable_interrupts != NULL) {
+        timer_for_schedule = &timertab[i];
+        timertab[i].enable_interrupts();
+      } else {
+        panic("Timer %s does not support interrupts\n", name);
+      }
+      return;
+    }
+  }
+
+  panic("Timer %s does not exist\n", name);
+}
 
 pde_t *
 alloc_pde_early_boot(void) {
@@ -67,17 +101,6 @@ early_boot_pml4_init(void) {
   map_addr_early_boot(FBUFFBASE, uefi_lp->FrameBufferBase, uefi_lp->FrameBufferSize);
 }
 
-// Test the stack backtrace function (lab 1 only)
-void
-test_backtrace(int x) {
-  cprintf( "entering test_backtrace %d\n", x );
-  if ( x > 0 )
-    test_backtrace( x - 1 );
-  else
-    mon_backtrace( 0, 0, 0 );
-  cprintf( "leaving test_backtrace %d\n", x );
-}
-
 void
 i386_init(void) {
   extern char end[];
@@ -87,6 +110,8 @@ i386_init(void) {
   // Initialize the console.
   // Can't call cprintf until after we do this!
   cons_init();
+
+  tsc_calibrate();
 
   cprintf("6828 decimal is %o octal!\n", 6828);
   cprintf("END: %p\n", end);
@@ -101,6 +126,8 @@ i386_init(void) {
     ctor++;
   }
 
+  timers_init();
+
   // Framebuffer init should be done after memory init.
   fb_init();
   cprintf("Framebuffer initialised\n");
@@ -108,18 +135,18 @@ i386_init(void) {
   // user environment initialization functions
   env_init();
 
-  irq_setmask_8259A(irq_mask_8259A & ~(1 << IRQ_CLOCK));
+  // choose the timer used for scheduling: hpet or pit
+  timers_schedule("hpet0");
   clock_idt_init();
 
-  pic_init();
-  rtc_init();
-  irq_setmask_8259A(~(~irq_mask_8259A | (1 << IRQ_CLOCK))); 
 #ifdef CONFIG_KSPACE
   // Touch all you want.
   ENV_CREATE_KERNEL_TYPE(prog_test1);
   ENV_CREATE_KERNEL_TYPE(prog_test2);
   ENV_CREATE_KERNEL_TYPE(prog_test3);
   ENV_CREATE_KERNEL_TYPE(prog_test4);
+  ENV_CREATE_KERNEL_TYPE(prog_test5);
+  ENV_CREATE_KERNEL_TYPE(prog_test6);
 #endif
 
   // Schedule and run the first user environment!

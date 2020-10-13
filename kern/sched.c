@@ -24,17 +24,6 @@ sched_yield(void) {
   // below to halt the cpu.
 
   // LAB 3: Your code here.
-
-  int id   = curenv ? ENVX( curenv_getid() ) : -1; // check if env available
-  int orig = id;
-
-  do {
-    id = ( id + 1 ) % NENV;
-    if ( envs[id].env_status == ENV_RUNNABLE || ( id == orig && envs[id].env_status == ENV_RUNNING ) ) {
-      env_run( envs + id );  // found env -> add
-    }
-  } while (id != orig);
-  sched_halt(); // nothing to do -> halt
 }
 
 // Halt this CPU when there is nothing to do. Wait until the

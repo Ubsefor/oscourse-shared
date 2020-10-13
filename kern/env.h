@@ -28,8 +28,8 @@ curenv_getid(void) {
 }
 
 #ifdef CONFIG_KSPACE
-extern void sys_exit(void);
-extern void sys_yield(void);
+extern void (*sys_exit)(void);
+extern void (*sys_yield)(void);
 #endif
 
 // Without this extra macro, we couldn't pass macros like TEST to

@@ -1,0 +1,3 @@
+LAB=5
+CONFIG_KSPACE=y
+LABDEFS=-Ddebug=0

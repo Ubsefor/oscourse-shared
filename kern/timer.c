@@ -289,7 +289,7 @@ hpet_get_main_cnt(void) {
 void
 hpet_enable_interrupts_tim0(void) {
   // LAB 5 code
-  hpetReg->GEN_CONF |= HPET_LEG_RT_CNF; // ??????????????????
+  hpetReg->GEN_CONF |= HPET_LEG_RT_CNF;
   hpetReg->TIM0_CONF = (IRQ_TIMER << 9) | HPET_TN_TYPE_CNF | HPET_TN_INT_ENB_CNF | HPET_TN_VAL_SET_CNF;
   hpetReg->TIM0_COMP = hpet_get_main_cnt() + Peta / 2 / hpetFemto;
   hpetReg->TIM0_COMP = Peta / 2 / hpetFemto;
@@ -300,7 +300,7 @@ hpet_enable_interrupts_tim0(void) {
 void
 hpet_enable_interrupts_tim1(void) {
   // LAB 5 code
-  hpetReg->GEN_CONF |= HPET_LEG_RT_CNF; //??????????????????
+  hpetReg->GEN_CONF |= HPET_LEG_RT_CNF;
   hpetReg->TIM1_CONF = (IRQ_CLOCK << 9) | HPET_TN_TYPE_CNF | HPET_TN_INT_ENB_CNF | HPET_TN_VAL_SET_CNF;
   hpetReg->TIM1_COMP = hpet_get_main_cnt() + 3 * Peta / 2 / hpetFemto;
   hpetReg->TIM1_COMP = 3 * Peta / 2 / hpetFemto;

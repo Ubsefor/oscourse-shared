@@ -8,7 +8,9 @@
 
 static void
 rtc_timer_init(void) {
-  pic_init();
+  // DELETED in LAB 5
+  // pic_init();
+  // DELETED in LAB 5 end
   rtc_init();
 }
 
@@ -32,14 +34,38 @@ struct Timer timer_rtc = {
 
 void
 rtc_init(void) {
+  // запрет прерываний
   nmi_disable();
-  // LAB 4: Your code here
+
+  // LAB 4 code
+  uint8_t reg_a = 0, reg_b = 0;
+  
+  // меняем делитель частоты регистра часов А,
+  // чтобы прерывания приходили раз в полсекунды
+  outb(IO_RTC_CMND, RTC_AREG);
+  reg_a = inb(IO_RTC_DATA);
+  reg_a = reg_a | 0x0F; // биты 0-3 = 1 => 500 мс (2 Гц) 
+  outb(IO_RTC_DATA, reg_a);
+
+  // устанавливаем бит RTC_PIE в регистре часов В
+  outb(IO_RTC_CMND, RTC_BREG);
+  reg_b = inb(IO_RTC_DATA);
+  reg_b = reg_b | RTC_PIE; 
+  outb(IO_RTC_DATA, reg_b);
+
+  // разрешить прерывания
+  nmi_enable();
+  // LAB 4 code end
 }
 
 uint8_t
 rtc_check_status(void) {
   uint8_t status = 0;
-  // LAB 4: Your code here
+
+  // LAB 4 code
+  outb(IO_RTC_CMND, RTC_CREG);
+  status = inb(IO_RTC_DATA);
+  // LAB 4 code end
 
   return status;
 }

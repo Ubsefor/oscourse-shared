@@ -23,18 +23,23 @@ sched_yield(void) {
   // simply drop through to the code
   // below to halt the cpu.
 
-  // LAB 3: Your code here.
-
-  int id   = curenv ? ENVX( curenv_getid() ) : -1; // check if env available
+  // LAB 3 code
+  // If no current environment,
+  // start scanning from the beginning of array
+  int id   = curenv ? ENVX(curenv_getid()) : -1;
   int orig = id;
 
   do {
-    id = ( id + 1 ) % NENV;
-    if ( envs[id].env_status == ENV_RUNNABLE || ( id == orig && envs[id].env_status == ENV_RUNNING ) ) {
-      env_run( envs + id );  // found env -> add
+    id = (id + 1) % NENV;
+    if (envs[id].env_status == ENV_RUNNABLE ||
+       (id == orig && envs[id].env_status == ENV_RUNNING)) {
+      // Found suitable environment to run
+      env_run(envs + id);
     }
   } while (id != orig);
-  sched_halt(); // nothing to do -> halt
+
+  sched_halt();
+  // LAB 3 code end
 }
 
 // Halt this CPU when there is nothing to do. Wait until the

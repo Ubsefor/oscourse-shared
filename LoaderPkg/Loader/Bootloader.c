@@ -103,71 +103,37 @@ InitGraphics (
     DEBUG ((DEBUG_ERROR, "JOS: Cannot find GOP protocol - %r\n", Status));
     return Status;
   }
-
+   
   //
-  // LAB 1: Your code here.
+  // LAB 1 code
   //
-  // Switch to the maximum or any other resolution of your preference.
-  // Refer to Graphics Output Protocol description in UEFI spec for
-  // more details.
+    
+  // This plot of code shows all available resolution modes and
+  // horizontal and vertical resolutions for them.
   //
-  // Hint: Use GetMode/SetMode functions.
+  // UINT32 i;
+  // UINTN SizeOfInfo;
+  // EFI_GRAPHICS_OUTPUT_MODE_INFORMATION InfoStructure;
+  // EFI_GRAPHICS_OUTPUT_MODE_INFORMATION * Info = &InfoStructure;
+  // for (i = 0; i < GraphicsOutput->Mode->MaxMode; i++) {
+  //   GraphicsOutput->QueryMode (
+  //     GraphicsOutput,
+  //     i,
+  //     &SizeOfInfo,
+  //     &Info
+  //     );
+  //   DEBUG ((DEBUG_INFO, "%u %u %u\n", i, Info->HorizontalResolution, Info->VerticalResolution));
+  // }
+    
+  // Set resolution mode to 10 (1280x760)
+  GraphicsOutput->SetMode (
+    GraphicsOutput,
+    10
+    );
+    
   //
-
-  UINT32 DefinedWidth  = 1280U;
-  UINT32 DefinedHeight = 720U;
-  UINT32 MaxModeNumber = -1U;
-  
-  for ( UINT32 i = 0; i < GraphicsOutput->Mode->MaxMode; i++ ){
-    
-    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *ModInfo ;
-    UINTN ModInfoSize  = 0;
-    
-    Status = GraphicsOutput->QueryMode(GraphicsOutput, i, &ModInfoSize, &ModInfo );
-    if ( EFI_ERROR (Status) ){
-      DEBUG ( ( DEBUG_WARN, "JOS: WARN: Could not query graphics mode: %r\n", Status ) );
-      break;
-    }
-    
-    if ( ModInfo->HorizontalResolution == DefinedWidth
-        && ModInfo->VerticalResolution == DefinedHeight
-        && ModInfo->PixelFormat == PixelBlueGreenRedReserved8BitPerColor ){
-      MaxModeNumber = i;
-      break;
-    }
-    
-  }
-  
-  if ( MaxModeNumber != -1U ){
-    Status = GraphicsOutput->SetMode( GraphicsOutput, MaxModeNumber );
-    
-    if ( EFI_ERROR( Status ) ){
-      DEBUG( ( DEBUG_WARN, "JOS: ERR: Could not set requested graphics mode: %r\n", Status ) );
-      
-      DEBUG( ( DEBUG_INFO, "JOS: INFO: Trying to set first available graphics mode... \n") );
-      
-      Status = GraphicsOutput->SetMode( GraphicsOutput, 0 );
-      
-      if ( EFI_ERROR( Status ) ){
-        DEBUG( ( DEBUG_ERROR, "JOS: ERR: Could not set fallback graphics mode: %r\n", Status ) );
-      }
-    }
-    
-  } else {
-    DEBUG( ( DEBUG_INFO, "JOS: INFO: Could not find requested graphics mode \n" ) );
-    
-    DEBUG( ( DEBUG_INFO, "JOS: INFO: Trying to set first available graphics mode... \n") );
-    
-    Status = GraphicsOutput->SetMode( GraphicsOutput, 0 );
-    
-    if ( EFI_ERROR( Status ) ){
-      DEBUG( ( DEBUG_ERROR, "JOS: ERR: Could not set fallback graphics mode: %r\n", Status ) );
-    }
-  }
-  
-  // check in for cycle for all available modes using GetMode()
-  // if desired mode is available – set it and break;
-  // if desired mode is not available – set first available mode
+  // End of LAB 1 code
+  //
 
   //
   // Fill screen with black.
@@ -1023,7 +989,7 @@ UefiMain (
   UINTN              EntryPoint;
   VOID               *GateData;
 
-#if 0 ///< Uncomment to await debugging
+#if 0 // Fix 0 to 1 to wait for debugger connection
   volatile BOOLEAN   Connected;
   DEBUG ((DEBUG_INFO, "JOS: Awaiting debugger connection\n"));
 

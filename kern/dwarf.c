@@ -75,18 +75,21 @@ dwarf_read_abbrev_entry(const void *entry, unsigned form, void *buf,
       break;
     case DW_FORM_block2: {
       // Read block of 2-byte length followed by 0 to 65535 contiguous information bytes
-      // LAB 2: Your code here:
-      Dwarf_Half length = get_unaligned(entry, Dwarf_Half);
-      entry += sizeof(Dwarf_Half);
+      // LAB2 code
+        
+      unsigned length = get_unaligned(entry, uint16_t);
+      entry += sizeof(uint16_t);
       struct Slice slice = {
-          .mem = entry,
-          .len = length,
+        .mem = entry,
+        .len = length,
       };
       if (buf) {
         memcpy(buf, &slice, sizeof(struct Slice));
       }
       entry += length;
-      bytes = sizeof(Dwarf_Half) + length;
+      bytes = sizeof(uint16_t) + length;
+        
+      // LAB2 code end
     } break;
     case DW_FORM_block4: {
       unsigned length = get_unaligned(entry, uint32_t);
@@ -692,36 +695,37 @@ address_by_fname(const struct Dwarf_Addrs *addrs, const char *fname,
           // To find it, we need to scan both abbreviation table and attribute values.
           // You can read unsigned LEB128 number using dwarf_read_uleb128 function.
           // Attribute value can be obtained using dwarf_read_abbrev_entry function.
-          // LAB 3: Your code here:
-
+            
+          // LAB 3 code
           uintptr_t low_pc = 0;
           do {
-            count = dwarf_read_uleb128( abbrev_entry, &name );
+            count = dwarf_read_uleb128(abbrev_entry, &name);
             abbrev_entry += count;
-            count = dwarf_read_uleb128( abbrev_entry, &form );
-            abbrev_entry = abbrev_entry + count;
-            if ( name == DW_AT_low_pc ) {
-              count = dwarf_read_abbrev_entry( entry, form, &low_pc, sizeof(low_pc), address_size );
+            count = dwarf_read_uleb128(abbrev_entry, &form);
+            abbrev_entry += count;
+            if (name == DW_AT_low_pc) {
+              count = dwarf_read_abbrev_entry(entry, form, &low_pc, sizeof(low_pc), address_size);
             } else {
-              count = dwarf_read_abbrev_entry( entry, form, NULL, 0, address_size );
+              count = dwarf_read_abbrev_entry(entry, form, NULL, 0, address_size);
             }
             entry += count;
-          } while ( name || form );
+          } while (name || form);
           *offset = low_pc;
         } else {
           // skip if not a subprogram or label
           do {
-            count = dwarf_read_uleb128( abbrev_entry, &name );
+            count = dwarf_read_uleb128(abbrev_entry, &name);
             abbrev_entry += count;
-            count = dwarf_read_uleb128( abbrev_entry, &form );
+            count = dwarf_read_uleb128(abbrev_entry, &form);
             abbrev_entry += count;
-            count = dwarf_read_abbrev_entry( entry, form, NULL, 0, address_size );
+            count = dwarf_read_abbrev_entry(entry, form, NULL, 0, address_size);
             entry += count;
-          } while ( name != 0 || form != 0 );
+          } while (name != 0 || form != 0);
+        // LAB 3 code end
         }
         return 0;
       }
-      pubnames_entry += strlen( pubnames_entry ) + 1;
+      pubnames_entry += strlen(pubnames_entry) + 1;
     }
   }
   return 0;

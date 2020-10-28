@@ -26,13 +26,13 @@ sched_yield(void) {
   // LAB 3 Your code here.
   // If no current environment,
   // start scanning from the beginning of array
-  int id   = curenv ? ENVX(curenv_getid()) : -1;
+  int id   = curenv ? ENVX(curenv_getid()) : 0;
   int orig = id;
 
   do {
     id = (id + 1) % NENV;
     if (envs[id].env_status == ENV_RUNNABLE ||
-       (id == orig && envs[id].env_status == ENV_RUNNING)) {
+        (id == orig && envs[id].env_status == ENV_RUNNING)) {
       // Found suitable environment to run
       env_run(envs + id);
     }

@@ -73,17 +73,17 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
   if (code < 0) {
     return code;
   }
-  
+
   // LAB2 Your code here.
-    
+
   // Find line number corresponding to given address.
   // Hint: note that we need the address of `call` instruction, but rip holds
   // address of the next instruction, so we should substract 5 from it.
   // Hint: use line_for_address from kern/dwarf_lines.c
-    
+
   int lineno_store;
-  addr = addr - 5;
-  code = line_for_address(&addrs, addr, line_offset, &lineno_store);
+  addr           = addr - 5;
+  code           = line_for_address(&addrs, addr, line_offset, &lineno_store);
   info->rip_line = lineno_store;
   if (code < 0) {
     return code;
@@ -105,21 +105,23 @@ find_function(const char *const fname) {
   // address_by_fname, which looks for function name in section .debug_pubnames
   // and naive_address_by_fname which performs full traversal of DIE tree.
   // LAB 3 Your code here.
-    
+
+#ifdef CONFIG_KSPACE
   struct {
     const char *name;
     uintptr_t addr;
   } scentry[] = {
-    { "sys_yield", (uintptr_t)sys_yield },
-    { "sys_exit", (uintptr_t)sys_exit },
+      {"sys_yield", (uintptr_t)sys_yield},
+      {"sys_exit", (uintptr_t)sys_exit},
   };
 
-  for (size_t i = 0; i < sizeof(scentry)/sizeof(*scentry); i++) {
+  for (size_t i = 0; i < sizeof(scentry) / sizeof(*scentry); i++) {
     if (!strcmp(scentry[i].name, fname)) {
       return scentry[i].addr;
     }
   }
-    
+#endif
+
   struct Dwarf_Addrs addrs;
   load_kernel_dwarf_info(&addrs);
   uintptr_t offset = 0;

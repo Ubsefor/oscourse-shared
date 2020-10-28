@@ -105,7 +105,8 @@ find_function(const char *const fname) {
   // address_by_fname, which looks for function name in section .debug_pubnames
   // and naive_address_by_fname which performs full traversal of DIE tree.
   // LAB 3 Your code here.
-    
+
+  #ifdef CONFIG_KSPACE
   struct {
     const char *name;
     uintptr_t addr;
@@ -119,7 +120,8 @@ find_function(const char *const fname) {
       return scentry[i].addr;
     }
   }
-    
+  #endif
+
   struct Dwarf_Addrs addrs;
   load_kernel_dwarf_info(&addrs);
   uintptr_t offset = 0;

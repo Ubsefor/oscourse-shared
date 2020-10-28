@@ -167,10 +167,10 @@ boot_alloc(uint32_t n) {
   // to any kernel code or global variables.
 
   if (!nextfree) {
-		extern char end[];
-		nextfree = ROUNDUP((char *) end, PGSIZE);
-	}
-  
+    extern char end[];
+    nextfree = ROUNDUP((char *)end, PGSIZE);
+  }
+
   // Allocate a chunk large enough to hold 'n' bytes, then update
   // nextfree.  Make sure nextfree is kept aligned
   // to a multiple of PGSIZE.
@@ -178,21 +178,20 @@ boot_alloc(uint32_t n) {
   // LAB 6: Your code here.
 
   if (!n) {
-	    return nextfree;
-	}
-	result = nextfree;
-	nextfree += ROUNDUP(n, PGSIZE);
-	if (PADDR(nextfree) > PGSIZE * npages) {
-	    panic("Out of memory on boot, what? how?!");
+    return nextfree;
   }
-  // This is for sanitizers
-  #ifdef SANITIZE_SHADOW_BASE
-	// Unpoison the result since it is now allocated.
-	platform_asan_unpoison(result, n);
-  #endif
+  result = nextfree;
+  nextfree += ROUNDUP(n, PGSIZE);
+  if (PADDR(nextfree) > PGSIZE * npages) {
+    panic("Out of memory on boot, what? how?!");
+  }
+// This is for sanitizers
+#ifdef SANITIZE_SHADOW_BASE
+  // Unpoison the result since it is now allocated.
+  platform_asan_unpoison(result, n);
+#endif
 
-	return result;
-
+  return result;
 }
 
 // Set up a two-level page table:
@@ -238,8 +237,8 @@ mem_init(void) {
   // to initialize all fields of each struct PageInfo to 0.
   // LAB 6: Your code here.
 
-  pages = (struct PageInfo *) boot_alloc(sizeof(*pages) * npages);
-	memset(pages, 0, sizeof(*pages) * npages);
+  pages = (struct PageInfo *)boot_alloc(sizeof(*pages) * npages);
+  memset(pages, 0, sizeof(*pages) * npages);
 
   //////////////////////////////////////////////////////////////////////
   // Now that we've allocated the initial kernel data structures, we set
@@ -432,23 +431,22 @@ page_free(struct PageInfo *pp) {
   // pp->pp_link is not NULL.
 
   if (pp->pp_ref) {
-		panic("page_free: Page is still referenced!\n");
+    panic("page_free: Page is still referenced!\n");
   }
 
   if (pp->pp_link) {
-	    panic("page_free: Page is already freed!\n");
-	}
+    panic("page_free: Page is already freed!\n");
+  }
 
   if (pp->pp_ref != 0 || pp->pp_link != NULL)
     panic("page_free: Page cannot be freed!\n");
 
   pp->pp_link    = page_free_list;
   page_free_list = pp;
-  
+
   if (!page_free_list_top) {
     page_free_list_top = pp;
   }
-
 }
 
 //
@@ -514,8 +512,8 @@ pgdir_walk(pde_t *pgdir, const void *va, int create) {
 // Hint: the TA solution uses pgdir_walk
 static void
 boot_map_region(pml4e_t *pml4e, uintptr_t va, size_t size, physaddr_t pa, int perm) {
-//  static void 
-//  boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm){
+  //  static void
+  //  boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm){
   // LAB 7: Fill this function in
 }
 

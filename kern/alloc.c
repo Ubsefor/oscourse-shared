@@ -81,7 +81,6 @@ test_free(void *ap) {
   // LAB 5 Your code here.
   spin_lock(&kernel_lock);
 
-
   for (p = freep; !(bp > p && bp < p->s.next); p = p->s.next)
     if (p >= p->s.next && (bp > p || bp < p->s.next))
       break;                                                 /* freed block at start or end of arena */

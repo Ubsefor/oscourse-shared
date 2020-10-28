@@ -144,7 +144,7 @@ trap_dispatch(struct Trapframe *tf) {
     // rtc_check_status();
     // pic_send_eoi(IRQ_CLOCK);
 
-    // читаем регистр статуса RTC и отправляем сигнал EOI на контроллер прерываний, 
+    // читаем регистр статуса RTC и отправляем сигнал EOI на контроллер прерываний,
     // сигнализируя об окончании обработки прерывания
     // pic_send_eoi(rtc_check_status());
 

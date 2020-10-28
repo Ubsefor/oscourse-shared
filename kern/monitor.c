@@ -38,9 +38,9 @@ static struct Command commands[] = {
     {"timer_start", "Start timer", mon_start},
     {"timer_stop", "Stop timer", mon_stop},
     {"timer_freq", "Count processor frequency", mon_frequency},
-    
+
     {"memory", "Print list of all physical memory pages", mon_memory},
-  
+
     {"backtrace", "Print stack backtrace", mon_backtrace}};
 #define NCOMMANDS (sizeof(commands) / sizeof(commands[0]))
 
@@ -81,7 +81,6 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf) {
   return 0;
 }
 
-
 // LAB 2 code
 int
 mon_mycommand(int argc, char **argv, struct Trapframe *tf) {
@@ -92,70 +91,70 @@ mon_mycommand(int argc, char **argv, struct Trapframe *tf) {
 int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf) {
   // LAB 2 code
-  
+
   cprintf("Stack backtrace:\n");
-  uint64_t rbp = read_rbp();
-  uintptr_t * pointer = (uintptr_t *)rbp;
+  uint64_t rbp       = read_rbp();
+  uintptr_t *pointer = (uintptr_t *)rbp;
   uint64_t rip;
   uint64_t buf;
   int digits_16;
   int code;
   struct Ripdebuginfo info;
-    
+
   while (rbp != 0) {
-      buf = rbp;
-      
-      // counting how many digits rbp has in hexadecimal representation
-      digits_16 = 1;
+    buf = rbp;
+
+    // counting how many digits rbp has in hexadecimal representation
+    digits_16 = 1;
+    buf       = buf / 16;
+    while (buf != 0) {
+      digits_16++;
       buf = buf / 16;
-      while (buf != 0) {
-        digits_16++;
-        buf = buf / 16;
-      }
-      
-      cprintf("  rbp ");
-      
-      // first print additional zeroes
-      for (int i = 1; i <= 16 - digits_16; i++) {
-        cprintf("0");
-      }
-      cprintf("%lx", rbp);
-      
-      // get next rbp from stack
-      rbp = *pointer;
-      
-      // get rip from stack
-      pointer++;
-      rip = *pointer;
-      
-      // counting how many digits rip has in hexadecimal representation
-      buf = rip;
-      digits_16 = 1;
-      buf = buf / 16;
-      while (buf != 0) {
-        digits_16++;
-        buf = buf / 16;
-      }
-      
-      cprintf("  rip ");
-      
-      // first print additional zeroes
-      for (int i = 1; i <= 16 - digits_16; i++) {
-        cprintf("0");
-      }
-      cprintf("%lx\n", rip);
-      
-      // get and print debug info
-      code = debuginfo_rip((uintptr_t)rip, (struct Ripdebuginfo *)&info);
-      if (code == 0) {
-          cprintf("         %s:%d: %s+%lu\n", info.rip_file, info.rip_line, info.rip_fn_name, rip - info.rip_fn_addr);
-      } else {
-          cprintf("Info not found");
-      }
-      
-      pointer = (uintptr_t *)rbp;
     }
-    
+
+    cprintf("  rbp ");
+
+    // first print additional zeroes
+    for (int i = 1; i <= 16 - digits_16; i++) {
+      cprintf("0");
+    }
+    cprintf("%lx", rbp);
+
+    // get next rbp from stack
+    rbp = *pointer;
+
+    // get rip from stack
+    pointer++;
+    rip = *pointer;
+
+    // counting how many digits rip has in hexadecimal representation
+    buf       = rip;
+    digits_16 = 1;
+    buf       = buf / 16;
+    while (buf != 0) {
+      digits_16++;
+      buf = buf / 16;
+    }
+
+    cprintf("  rip ");
+
+    // first print additional zeroes
+    for (int i = 1; i <= 16 - digits_16; i++) {
+      cprintf("0");
+    }
+    cprintf("%lx\n", rip);
+
+    // get and print debug info
+    code = debuginfo_rip((uintptr_t)rip, (struct Ripdebuginfo *)&info);
+    if (code == 0) {
+      cprintf("         %s:%d: %s+%lu\n", info.rip_file, info.rip_line, info.rip_fn_name, rip - info.rip_fn_addr);
+    } else {
+      cprintf("Info not found");
+    }
+
+    pointer = (uintptr_t *)rbp;
+  }
+
   return 0;
 }
 
@@ -193,23 +192,23 @@ mon_frequency(int argc, char **argv, struct Trapframe *tf) {
 
 // LAB 6: Your code here.
 // Implement memory (mon_memory) commands.
-int 
+int
 mon_memory(int argc, char **argv, struct Trapframe *tf) {
   size_t i;
-	int is_cur_free;
+  int is_cur_free;
 
-	for (i = 1; i <= npages; i++) {
+  for (i = 1; i <= npages; i++) {
     is_cur_free = !page_is_allocated(&pages[i - 1]);
-		cprintf("%lu", i);
-		if ((i < npages) && (page_is_allocated(&pages[i]) ^ is_cur_free)) {
-			while ((i < npages) && (page_is_allocated(&pages[i]) ^ is_cur_free)) {
+    cprintf("%lu", i);
+    if ((i < npages) && (page_is_allocated(&pages[i]) ^ is_cur_free)) {
+      while ((i < npages) && (page_is_allocated(&pages[i]) ^ is_cur_free)) {
         i++;
       }
-			cprintf("..%lu", i);
-		}
-		cprintf(is_cur_free ? " FREE\n" : " ALLOCATED\n");
-	}
-	
+      cprintf("..%lu", i);
+    }
+    cprintf(is_cur_free ? " FREE\n" : " ALLOCATED\n");
+  }
+
   return 0;
 }
 

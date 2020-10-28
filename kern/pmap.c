@@ -332,10 +332,10 @@ page_init(void) {
 
   //  2) The rest of base memory, [PGSIZE, npages_basemem * PGSIZE)
   //     is free.
-  pages[2].pp_ref = 0;
-  page_free_list  = &pages[2];
-  last            = &pages[2];
-  for (i = 2; i < npages_basemem; i++) {
+  pages[1].pp_ref = 0;
+  page_free_list  = &pages[1];
+  last            = &pages[1];
+  for (i = 1; i < npages_basemem; i++) {
     if (is_page_allocatable(i)) {
       pages[i].pp_ref = 0;
       last->pp_link   = &pages[i];

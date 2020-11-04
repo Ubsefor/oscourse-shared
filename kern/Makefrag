@@ -51,6 +51,15 @@ KERN_SRCFILES += kern/payload.c
 .INTERMEDIATE: kern/payload.c
 endif
 
+ifdef KASAN
+KERN_SRCFILES +=	llvm/asan/asan.c \
+			llvm/asan/asan_internal.c \
+			llvm/asan/asan_memintrinsics.c \
+			llvm/asan/asan_platform.kjos.c \
+			llvm/asan/asan_prim.c \
+			llvm/asan/asan_used.c
+endif
+
 ifdef KUBSAN
 KERN_SRCFILES +=	llvm/ubsan/ubsan.c
 endif

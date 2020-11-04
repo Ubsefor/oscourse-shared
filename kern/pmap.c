@@ -194,6 +194,16 @@ boot_alloc(uint32_t n) {
   return result;
 }
 
+static struct PageInfo *
+evaluate_page_free_list_top() {
+  struct PageInfo *pp = page_free_list, *pt = NULL;
+  while (pp) {
+    pt = pp;
+    pp = pp->pp_link;
+  }
+  return pt;
+}
+
 // Set up a two-level page table:
 //    kern_pml4e is its linear (virtual) address of the root
 //
@@ -206,7 +216,7 @@ boot_alloc(uint32_t n) {
 void
 mem_init(void) {
   pml4e_t *pml4e;
-
+  size_t size_to_alloc;
   // Find out how much memory the machine has (npages & npages_basemem).
   i386_detect_memory();
 
@@ -249,7 +259,103 @@ mem_init(void) {
   page_init();
 
   check_page_free_list(1);
+  check_page();
   check_page_alloc();
+
+  //////////////////////////////////////////////////////////////////////
+  // Now we set up virtual memory
+
+  //////////////////////////////////////////////////////////////////////
+  // Map 'pages' read-only by the user at linear address UPAGES
+  // Permissions:
+  //    - the new image at UPAGES -- kernel R, user R
+  //      (ie. perm = PTE_U | PTE_P)
+  //    - pages itself -- kernel RW, user NONE
+  // LAB 7: Your code goes here:
+
+  //////////////////////////////////////////////////////////////////////
+  // Use the physical memory that 'bootstack' refers to as the kernel
+  // stack.  The kernel stack grows down from virtual address KSTACKTOP.
+  // We consider the entire range from [KSTACKTOP-PTSIZE, KSTACKTOP)
+  // to be the kernel stack, but break this into two pieces:
+  //     * [KSTACKTOP-KSTKSIZE, KSTACKTOP) -- backed by physical memory
+  //     * [KSTACKTOP-PTSIZE, KSTACKTOP-KSTKSIZE) -- not backed; so if
+  //       the kernel overflows its stack, it will fault rather than
+  //       overwrite memory.  Known as a "guard page".
+  //     Permissions: kernel RW, user NONE
+  // LAB 7: Your code goes here:
+
+  // Additionally map stack to lower 32-bit addresses.
+  boot_map_region(kern_pml4e, X86ADDR(KSTACKTOP - KSTKSIZE), KSTKSIZE, PADDR(bootstack), PTE_P | PTE_W);
+
+  //////////////////////////////////////////////////////////////////////
+  // Map all of physical memory at KERNBASE.
+  // Ie.  the VA range [KERNBASE, 2^32) should map to
+  //      the PA range [0, 2^32 - KERNBASE)
+  // We might not have 2^32 - KERNBASE bytes of physical memory, but
+  // we just set up the mapping anyway.
+  // Permissions: kernel RW, user NONE
+  // LAB 7: Your code goes here:
+
+  // Additionally map kernel to lower 32-bit addresses. Assumes kernel should not exceed 50 mb.
+  size_to_alloc = MIN(0x3200000, npages * PGSIZE);
+  boot_map_region(kern_pml4e, X86ADDR(KERNBASE), size_to_alloc, 0, PTE_P | PTE_W);
+
+  //////////////////////////////////////////////////////////////////////
+  // Map the UEFI runtime virtual memory to it corresponding physical
+  // address.
+  //     Permissions: kernel RW, user NONE
+  EFI_MEMORY_DESCRIPTOR *mmap_curr;
+  uintptr_t phys_start, virt_start;
+
+  for (mmap_curr = mmap_base; mmap_curr < mmap_end; mmap_curr = (EFI_MEMORY_DESCRIPTOR *)((uintptr_t)mmap_curr + mem_map_size)) {
+    phys_start    = (uintptr_t)mmap_curr->PhysicalStart;
+    virt_start    = (uintptr_t)mmap_curr->VirtualStart;
+    size_to_alloc = mmap_curr->NumberOfPages * PGSIZE;
+    if (mmap_curr->Attribute & EFI_MEMORY_RUNTIME) {
+      boot_map_region(kern_pml4e, virt_start, size_to_alloc, phys_start, PTE_P | PTE_W);
+    }
+  }
+
+  // Check that the initial page directory has been set up correctly.
+  check_kern_pml4e();
+
+  // Fix physical adresses to virtual ones before loading pml4.
+  fix_lp_addresses();
+
+  // Switch from the minimal entry page directory to the full kern_pml4e
+  // page table we just created.	Our instruction pointer should be
+  // somewhere between KERNBASE and KERNBASE+4MB right now, which is
+  // mapped the same way by both page tables.
+  //
+  // If the machine reboots at this point, you've probably set up your
+  // kern_pml4e wrong.
+  lcr3(kern_cr3);
+
+  // entry.S set the really important flags in cr0.
+  // Here we configure the rest of the flags that we care about.
+  {
+    uintptr_t cr0 = rcr0();
+    cr0 |= CR0_PE | CR0_PG | CR0_AM | CR0_WP | CR0_NE | CR0_MP;
+    cr0 &= ~(CR0_TS | CR0_EM);
+    lcr0(cr0);
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // Map the frame buffer from UEFI using base address as physical address
+  // and mapping only the required passed amount of memory.
+  //     Permissions: kernel RW, user NONE
+  LOADER_PARAMS *lp  = (LOADER_PARAMS *)uefi_lp;
+  uintptr_t physaddr = lp->FrameBufferBase;
+  uintptr_t size     = lp->FrameBufferSize;
+
+  boot_map_region(kern_pml4e, FBUFFBASE, size, physaddr, PTE_P | PTE_W);
+
+  // Some more checks, only possible after kern_pml4e is installed.
+  check_page_installed_pml4();
+  page_free_list_top = evaluate_page_free_list_top();
+
+  check_page_free_list(0);
 }
 
 #ifdef SANITIZE_SHADOW_BASE
@@ -776,4 +882,310 @@ check_page_alloc(void) {
   assert(nfree == 0);
 
   cprintf("check_page_alloc() succeeded!\n");
+}
+
+//
+// Checks that the kernel part of virtual address space
+// has been setup roughly correctly (by mem_init()).
+//
+// This function doesn't test every corner case,
+// but it is a pretty good sanity check.
+//
+
+static void
+check_kern_pml4e(void) {
+  uint64_t i, n;
+  pml4e_t *pml4e;
+
+  pml4e = kern_pml4e;
+
+  // check pages array
+  n = ROUNDUP(npages * sizeof(struct PageInfo), PGSIZE);
+  for (i = 0; i < n; i += PGSIZE)
+    assert(check_va2pa(pml4e, UPAGES + i) == PADDR(pages) + i);
+
+  // check phys mem
+  for (i = 0; i < npages * PGSIZE; i += PGSIZE)
+    assert(check_va2pa(pml4e, KERNBASE + i) == i);
+
+  // check kernel stack
+  for (i = 0; i < KSTKSIZE; i += PGSIZE)
+    assert(check_va2pa(pml4e, KSTACKTOP - KSTKSIZE + i) == PADDR(bootstack) + i);
+  assert(check_va2pa(pml4e, KSTACKTOP - PTSIZE) == ~0);
+
+  pdpe_t *pdpe = KADDR(PTE_ADDR(kern_pml4e[1]));
+  pde_t *pgdir = KADDR(PTE_ADDR(pdpe[0]));
+  // check PDE permissions
+  for (i = 0; i < NPDENTRIES; i++) {
+    switch (i) {
+      case VPD(UVPT):
+      case VPD(KSTACKTOP - 1):
+      case VPD(UPAGES):
+      case VPD(UENVS):
+        assert(pgdir[i] & PTE_P);
+        break;
+      default:
+        if (i >= VPD(KERNBASE)) {
+          if (pgdir[i] & PTE_P)
+            assert(pgdir[i] & PTE_W);
+          else
+            assert(pgdir[i] == 0);
+        }
+        break;
+    }
+  }
+  cprintf("check_kern_pml4e() succeeded!\n");
+}
+
+// This function returns the physical address of the page containing 'va',
+// defined by the page directory 'pgdir'.  The hardware normally performs
+// this functionality for us!  We define our own version to help check
+// the check_kern_pml4e() function; it shouldn't be used elsewhere.
+
+static physaddr_t
+check_va2pa(pml4e_t *pml4e, uintptr_t va) {
+  pte_t *pte;
+  pdpe_t *pdpe;
+  pde_t *pde;
+  // cprintf("%x", va);
+  pml4e = &pml4e[PML4(va)];
+  // cprintf(" %x %x " , PML4(va), *pml4e);
+  if (!(*pml4e & PTE_P))
+    return ~0;
+  pdpe = (pdpe_t *)KADDR(PTE_ADDR(*pml4e));
+  // cprintf(" %x %x " , pdpe, *pdpe);
+  if (!(pdpe[PDPE(va)] & PTE_P))
+    return ~0;
+  pde = (pde_t *)KADDR(PTE_ADDR(pdpe[PDPE(va)]));
+  // cprintf(" %x %x " , pde, *pde);
+  pde = &pde[PDX(va)];
+  if (!(*pde & PTE_P))
+    return ~0;
+  pte = (pte_t *)KADDR(PTE_ADDR(*pde));
+  // cprintf(" %x %x " , pte, *pte);
+  if (!(pte[PTX(va)] & PTE_P))
+    return ~0;
+  // cprintf(" %x %x\n" , PTX(va),  PTE_ADDR(pte[PTX(va)]));
+  return PTE_ADDR(pte[PTX(va)]);
+}
+
+// check page_insert, page_remove, &c
+static void
+check_page(void) {
+  struct PageInfo *pp0, *pp1, *pp2, *pp3, *pp4, *pp5;
+  struct PageInfo *fl;
+  pte_t *ptep, *ptep1;
+  pdpe_t *pdpe;
+  pde_t *pde;
+  pml4e_t pml4e_old; //used to store value instead of pointer
+  void *va;
+  int i;
+  pp0 = pp1 = pp2 = pp3 = pp4 = pp5 = 0;
+
+  //Save old pml4[0] entry and temporarily set it to 0.
+  pml4e_old     = kern_pml4e[0];
+  kern_pml4e[0] = 0;
+
+  assert(pp0 = page_alloc(0));
+  assert(pp1 = page_alloc(0));
+  assert(pp2 = page_alloc(0));
+  assert(pp3 = page_alloc(0));
+  assert(pp4 = page_alloc(0));
+  assert(pp5 = page_alloc(0));
+
+  assert(pp0);
+  assert(pp1 && pp1 != pp0);
+  assert(pp2 && pp2 != pp1 && pp2 != pp0);
+  assert(pp3 && pp3 != pp2 && pp3 != pp1 && pp3 != pp0);
+  assert(pp4 && pp4 != pp3 && pp4 != pp2 && pp4 != pp1 && pp4 != pp0);
+  assert(pp5 && pp5 != pp4 && pp5 != pp3 && pp5 != pp2 && pp5 != pp1 && pp5 != pp0);
+
+  // temporarily steal the rest of the free pages
+  fl = page_free_list;
+  assert(fl != NULL);
+  page_free_list = NULL;
+
+  // should be no free memory
+  assert(!page_alloc(0));
+
+  // there is no page allocated at address 0
+  assert(page_lookup(kern_pml4e, (void *)0x0, &ptep) == NULL);
+
+  // there is no free memory, so we can't allocate a page table
+  assert(page_insert(kern_pml4e, pp1, 0x0, 0) < 0);
+
+  // free pp0 and try again: pp0 should be used for page table
+  page_free(pp0);
+  assert(page_insert(kern_pml4e, pp1, 0x0, 0) < 0);
+  page_free(pp2);
+  page_free(pp3);
+
+  //cprintf("pp0 ref count = %d\n",pp0->pp_ref);
+  //cprintf("pp2 ref count = %d\n",pp2->pp_ref);
+  assert(page_insert(kern_pml4e, pp1, 0x0, 0) == 0);
+  assert((PTE_ADDR(kern_pml4e[0]) == page2pa(pp0) || PTE_ADDR(kern_pml4e[0]) == page2pa(pp2) || PTE_ADDR(kern_pml4e[0]) == page2pa(pp3)));
+  assert(check_va2pa(kern_pml4e, 0x0) == page2pa(pp1));
+  assert(pp1->pp_ref == 1);
+  //should be able to map pp3 at PGSIZE because pp0 is already allocated for page table
+  assert(page_insert(kern_pml4e, pp3, (void *)PGSIZE, 0) == 0);
+  assert(check_va2pa(kern_pml4e, PGSIZE) == page2pa(pp3));
+  assert(pp3->pp_ref == 2);
+
+  // should be no free memory
+  assert(!page_alloc(0));
+
+  // should be able to map pp3 at PGSIZE because it's already there
+  assert(page_insert(kern_pml4e, pp3, (void *)PGSIZE, 0) == 0);
+  assert(check_va2pa(kern_pml4e, PGSIZE) == page2pa(pp3));
+  assert(pp3->pp_ref == 2);
+
+  // pp3 should NOT be on the free list
+  // could happen in ref counts are handled sloppily in page_insert
+  assert(!page_alloc(0));
+  // check that pgdir_walk returns a pointer to the pte
+  pdpe = KADDR(PTE_ADDR(kern_pml4e[PML4(PGSIZE)]));
+  pde  = KADDR(PTE_ADDR(pdpe[PDPE(PGSIZE)]));
+  ptep = KADDR(PTE_ADDR(pde[PDX(PGSIZE)]));
+  assert(pml4e_walk(kern_pml4e, (void *)PGSIZE, 0) == ptep + PTX(PGSIZE));
+
+  // should be able to change permissions too.
+  assert(page_insert(kern_pml4e, pp3, (void *)PGSIZE, PTE_U) == 0);
+  assert(check_va2pa(kern_pml4e, PGSIZE) == page2pa(pp3));
+  assert(pp3->pp_ref == 2);
+  assert(*pml4e_walk(kern_pml4e, (void *)PGSIZE, 0) & PTE_U);
+  assert(kern_pml4e[0] & PTE_U);
+
+  // should not be able to map at PTSIZE because need free page for page table
+  assert(page_insert(kern_pml4e, pp0, (void *)PTSIZE, 0) < 0);
+
+  // insert pp1 at PGSIZE (replacing pp3)
+  assert(page_insert(kern_pml4e, pp1, (void *)PGSIZE, 0) == 0);
+  assert(!(*pml4e_walk(kern_pml4e, (void *)PGSIZE, 0) & PTE_U));
+
+  // should have pp1 at both 0 and PGSIZE
+  assert(check_va2pa(kern_pml4e, 0) == page2pa(pp1));
+  assert(check_va2pa(kern_pml4e, PGSIZE) == page2pa(pp1));
+  // ... and ref counts should reflect this
+  assert(pp1->pp_ref == 2);
+  assert(pp3->pp_ref == 1);
+
+  // unmapping pp1 at 0 should keep pp1 at PGSIZE
+  page_remove(kern_pml4e, 0x0);
+  assert(check_va2pa(kern_pml4e, 0x0) == ~0);
+  assert(check_va2pa(kern_pml4e, PGSIZE) == page2pa(pp1));
+  assert(pp1->pp_ref == 1);
+  assert(pp3->pp_ref == 1);
+
+  // Test re-inserting pp1 at PGSIZE.
+  // Thanks to Varun Agrawal for suggesting this test case.
+  assert(page_insert(kern_pml4e, pp1, (void *)PGSIZE, 0) == 0);
+  assert(pp1->pp_ref);
+  assert(pp1->pp_link == NULL);
+
+  // unmapping pp1 at PGSIZE should free it
+  page_remove(kern_pml4e, (void *)PGSIZE);
+  assert(check_va2pa(kern_pml4e, 0x0) == ~0);
+  assert(check_va2pa(kern_pml4e, PGSIZE) == ~0);
+  assert(pp1->pp_ref == 0);
+  assert(pp3->pp_ref == 1);
+
+#if 0
+	// should be able to page_insert to change a page
+	// and see the new data immediately.
+	memset(page2kva(pp1), 1, PGSIZE);
+	memset(page2kva(pp2), 2, PGSIZE);
+	page_insert(boot_pgdir, pp1, 0x0, 0);
+	assert(pp1->pp_ref == 1);
+	assert(*(int*)0 == 0x01010101);
+	page_insert(boot_pgdir, pp2, 0x0, 0);
+	assert(*(int*)0 == 0x02020202);
+	assert(pp2->pp_ref == 1);
+	assert(pp1->pp_ref == 0);
+	page_remove(boot_pgdir, 0x0);
+	assert(pp2->pp_ref == 0);
+#endif
+
+  // forcibly take pp3 back
+  assert((PTE_ADDR(kern_pml4e[0]) == page2pa(pp0) || PTE_ADDR(kern_pml4e[0]) == page2pa(pp2) || PTE_ADDR(kern_pml4e[0]) == page2pa(pp3)));
+  kern_pml4e[0] = 0;
+  assert(pp3->pp_ref == 1);
+  page_decref(pp3);
+  // check pointer arithmetic in pml4e_walk
+  page_decref(pp0);
+  page_decref(pp2);
+  va    = (void *)(PGSIZE * 100);
+  ptep  = pml4e_walk(kern_pml4e, va, 1);
+  pdpe  = KADDR(PTE_ADDR(kern_pml4e[PML4(va)]));
+  pde   = KADDR(PTE_ADDR(pdpe[PDPE(va)]));
+  ptep1 = KADDR(PTE_ADDR(pde[PDX(va)]));
+  assert(ptep == ptep1 + PTX(va));
+
+  // check that new page tables get cleared
+  page_decref(pp4);
+  memset(page2kva(pp4), 0xFF, PGSIZE);
+  pml4e_walk(kern_pml4e, 0x0, 1);
+  pdpe = KADDR(PTE_ADDR(kern_pml4e[0]));
+  pde  = KADDR(PTE_ADDR(pdpe[0]));
+  ptep = KADDR(PTE_ADDR(pde[0]));
+  for (i = 0; i < NPTENTRIES; i++)
+    assert((ptep[i] & PTE_P) == 0);
+  kern_pml4e[0] = 0;
+
+  // give free list back
+  page_free_list = fl;
+
+  // free the pages we took
+  page_decref(pp0);
+  page_decref(pp1);
+  page_decref(pp2);
+
+  // resotre pml4[0]
+  kern_pml4e[0] = pml4e_old;
+
+  cprintf("check_page() succeeded!\n");
+}
+
+// check page_insert, page_remove, &c, with an installed kern_pml4e
+static void
+check_page_installed_pml4(void) {
+  struct PageInfo *pp0, *pp1, *pp2;
+  pml4e_t pml4e_old; //used to store value instead of pointer
+
+  //Save old pml4[0] entry and temporarily set it to 0.
+  pml4e_old     = kern_pml4e[0];
+  kern_pml4e[0] = 0;
+
+  // check that we can read and write installed pages
+  pp1 = pp2 = 0;
+  assert((pp0 = page_alloc(0)));
+  assert((pp1 = page_alloc(0)));
+  assert((pp2 = page_alloc(0)));
+  page_free(pp0);
+  memset(page2kva(pp1), 1, PGSIZE);
+  memset(page2kva(pp2), 2, PGSIZE);
+  page_insert(kern_pml4e, pp1, (void *)PGSIZE, PTE_W);
+  assert(pp1->pp_ref == 1);
+  assert(*(uint32_t *)PGSIZE == 0x01010101U);
+  page_insert(kern_pml4e, pp2, (void *)PGSIZE, PTE_W);
+  assert(*(uint32_t *)PGSIZE == 0x02020202U);
+  assert(pp2->pp_ref == 1);
+  assert(pp1->pp_ref == 0);
+  *(uint32_t *)PGSIZE = 0x03030303U;
+  assert(*(uint32_t *)page2kva(pp2) == 0x03030303U);
+  page_remove(kern_pml4e, (void *)PGSIZE);
+  assert(pp2->pp_ref == 0);
+
+  // forcibly take pp0 back
+  assert(PTE_ADDR(kern_pml4e[0]) == page2pa(pp0));
+  kern_pml4e[0] = 0;
+  assert(pp0->pp_ref == 1);
+  pp0->pp_ref = 0;
+
+  // free the pages we took
+  page_free(pp0);
+
+  // resotre pml4[0]
+  kern_pml4e[0] = pml4e_old;
+
+  cprintf("check_page_installed_pml4() succeeded!\n");
 }

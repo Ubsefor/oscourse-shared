@@ -156,6 +156,35 @@ CFLAGS += $(EXTRA_CFLAGS)
 KERN_SAN_CFLAGS :=
 KERN_SAN_LDFLAGS :=
 
+ifdef KASAN
+
+CFLAGS += -DSAN_ENABLE_KASAN=1
+
+# The definitions assume kernel base address at 0x8041600000, see kern/kernel.ld for details.
+# SANITIZE_SHADOW_OFF is an offset from shadow base (SHADOW_BASE - (KERNBASE >> 3)).
+# SANITIZE_SHADOW_SIZE of 32 MB allows 256 MB of addressible memory (due to byte granularity).
+KERN_SAN_CFLAGS := -fsanitize=address -fsanitize-blacklist=llvm/blacklist.txt \
+	-DSANITIZE_SHADOW_OFF=0x7077d40000 -DSANITIZE_SHADOW_BASE=0x8080000000 \
+	-DSANITIZE_SHADOW_SIZE=0x8000000 -mllvm -asan-mapping-offset=0x7077d40000
+
+KERN_SAN_LDFLAGS := --wrap memcpy  \
+	--wrap memset  \
+	--wrap memmove \
+	--wrap bcopy   \
+	--wrap bzero   \
+	--wrap bcmp    \
+	--wrap memcmp  \
+	--wrap strcat  \
+	--wrap strcpy  \
+	--wrap strlcpy \
+	--wrap strncpy \
+	--wrap strlcat \
+	--wrap strncat \
+	--wrap strnlen \
+	--wrap strlen
+
+endif
+
 ifdef KUBSAN
 
 CFLAGS += -DSAN_ENABLE_KUBSAN=1

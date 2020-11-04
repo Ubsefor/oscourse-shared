@@ -1,0 +1,18 @@
+# This is required for basic initialisation for KASAN itself
+fun:mem_init
+fun:i386_detect_memory
+fun:load_params_read
+fun:fix_lp_addresses
+fun:is_page_allocatable
+fun:kasan_mem_init
+src:kern/init.c
+# This is used for panic'ing without recursion from KASAN
+fun:_panic
+# This function makes direct access to the pages inaccessible from KASAN shadow
+fun:check_page_installed_pml4
+# Avoid sanitizing direct memory access for CGA and UART for simplicity
+src:kern/console.c
+# KASAN itself should not be instrumented
+src:llvm/asan/*
+
+fun:mon_backtrace

@@ -1,0 +1,59 @@
+#******************************************************************
+#
+# Institute for System Programming of the Russian Academy of Sciences
+# Copyright (C) 2017 ISPRAS
+#
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation, Version 3.
+#
+# This program is distributed in the hope # that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See the GNU General Public License version 3 for more details.
+#
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+Import('part_env')
+
+part_env.Append(CCFLAGS = ' -fsanitize=address -mllvm -asan-mapping-offset=' + str(part_env['SANITIZE_SHADOW_OFF']))
+
+known_builtins = [
+	'memcpy',
+	'memset',
+	'memmove',
+	'bcopy',
+	'bzero',
+	'bcmp',
+	'memcmp',
+	'strcat',
+	'strcpy',
+	'strlcpy',
+	'strncpy',
+	'strlcat',
+	'strncat',
+	'strnlen',
+	'strlen'
+]
+
+# We cannot sanitize the functions we use before full initialisation.
+part_env['SANITIZE_BLACKLIST_FUN'].extend(['__pok_partition_start', 'jet_memory_block_get_status'])
+# Allocator is wrapped to detect invalid heap usage, and block status is wrapped to detect non-ELF memory access.
+part_env.Append(LINKFLAGS = ' -Wl,--wrap,jet_sallocator_alloc_aligned -Wl,--wrap,jet_memory_block_get_status')
+
+# We additionally wrap & disable several builtins that are sanitised manually for speed & usage reasons.
+part_env['SANITIZE_BLACKLIST_FUN'].extend(known_builtins)
+#part_env['SANITIZE_BLACKLIST_FUN'].append('jet_console_write_user')
+part_env.Append(LINKFLAGS = ' -Wl,--wrap,' + ' -Wl,--wrap,'.join(known_builtins))
+
+asan = part_env.createSanitizeTarget(
+    'sanitize_user_asan',
+    lambda: part_env.StaticObject(source = Glob('*.c'))
+)
+
+Return('asan')
+
+# EOF

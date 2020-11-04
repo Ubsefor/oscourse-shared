@@ -1,0 +1,25 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+
+from gradelib import *
+
+r = Runner(save("jos.out"),
+           stop_breakpoint("readline"))
+
+@test(0, "running JOS")
+def test_jos():
+    r.run_qemu()
+
+@test(40, "Page management", parent=test_jos)
+def test_check_page():
+    r.match(r"check_page\(\) succeeded!")
+
+@test(40, "Kernel page directory", parent=test_jos)
+def test_check_kern_pgdir():
+    r.match(r"check_kern_pml4e\(\) succeeded!")
+
+@test(20, "Page management 2", parent=test_jos)
+def test_check_page_installed_pgdir():
+    r.match(r"check_page_installed_pml4\(\) succeeded!")
+
+run_tests()

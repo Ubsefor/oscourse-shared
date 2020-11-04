@@ -1,0 +1,153 @@
+obj/kern/kdebug.o: kern/kdebug.c inc/string.h inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/memlayout.h inc/mmu.h inc/assert.h inc/stdio.h inc/stdarg.h \
+ inc/dwarf.h inc/elf.h inc/uefi.h inc/../LoaderPkg/Include/LoaderParams.h \
+ inc/../LoaderPkg/Include/Elf64.h inc/x86.h kern/kdebug.h kern/pmap.h \
+ kern/env.h inc/env.h inc/trap.h kern/cpu.h
+obj/kern/trap.o: kern/trap.c inc/mmu.h inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/x86.h inc/assert.h inc/stdio.h inc/stdarg.h inc/string.h kern/trap.h \
+ inc/trap.h kern/console.h kern/monitor.h kern/env.h inc/env.h \
+ inc/memlayout.h kern/cpu.h kern/sched.h kern/kclock.h kern/picirq.h \
+ kern/timer.h
+obj/kern/console.o: kern/console.c inc/x86.h inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/memlayout.h inc/mmu.h inc/kbdreg.h inc/string.h inc/assert.h \
+ inc/stdio.h inc/stdarg.h kern/console.h inc/uefi.h \
+ inc/../LoaderPkg/Include/LoaderParams.h
+obj/kern/spinlock.o: kern/spinlock.c inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/assert.h inc/stdio.h inc/stdarg.h inc/x86.h inc/memlayout.h \
+ inc/mmu.h inc/string.h kern/cpu.h inc/env.h inc/trap.h kern/spinlock.h \
+ kern/kdebug.h
+obj/kern/printfmt.o: lib/printfmt.c inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/stdio.h inc/stdarg.h inc/string.h inc/error.h
+obj/kern/timer.o: kern/timer.c inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/assert.h inc/stdio.h inc/stdarg.h inc/string.h inc/memlayout.h \
+ inc/mmu.h inc/x86.h inc/uefi.h inc/../LoaderPkg/Include/LoaderParams.h \
+ kern/timer.h kern/kclock.h kern/picirq.h kern/trap.h inc/trap.h \
+ kern/pmap.h
+obj/kern/pmap.o: kern/pmap.c inc/x86.h inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/mmu.h inc/error.h inc/string.h inc/assert.h inc/stdio.h inc/stdarg.h \
+ kern/pmap.h inc/memlayout.h kern/kclock.h kern/env.h inc/env.h \
+ inc/trap.h kern/cpu.h inc/uefi.h inc/../LoaderPkg/Include/LoaderParams.h
+obj/kern/kclock.o: kern/kclock.c inc/x86.h inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ kern/kclock.h kern/timer.h kern/trap.h inc/trap.h inc/mmu.h \
+ kern/picirq.h
+obj/kern/trapentry.o: kern/trapentry.S inc/mmu.h inc/memlayout.h \
+ inc/trap.h kern/picirq.h
+obj/kern/sched.o: kern/sched.c inc/assert.h inc/stdio.h inc/stdarg.h \
+ inc/x86.h inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ kern/env.h inc/env.h inc/trap.h inc/memlayout.h inc/mmu.h kern/cpu.h \
+ kern/monitor.h
+obj/kern/monitor.o: kern/monitor.c inc/stdio.h inc/stdarg.h inc/string.h \
+ inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/memlayout.h inc/mmu.h inc/assert.h inc/x86.h kern/console.h \
+ kern/monitor.h kern/kdebug.h kern/tsc.h kern/timer.h kern/env.h \
+ inc/env.h inc/trap.h kern/cpu.h kern/pmap.h
+obj/kern/uefiasm.o: kern/uefiasm.S inc/mmu.h inc/memlayout.h kern/asm64.h
+obj/kern/env.o: kern/env.c inc/x86.h inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/mmu.h inc/error.h inc/string.h inc/assert.h inc/stdio.h inc/stdarg.h \
+ inc/elf.h inc/uefi.h inc/../LoaderPkg/Include/LoaderParams.h \
+ inc/../LoaderPkg/Include/Elf64.h kern/env.h inc/env.h inc/trap.h \
+ inc/memlayout.h kern/cpu.h kern/trap.h kern/monitor.h kern/sched.h \
+ kern/kdebug.h
+obj/kern/tsc.o: kern/tsc.c inc/x86.h inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/stdio.h inc/stdarg.h inc/string.h kern/tsc.h kern/timer.h
+obj/kern/bootstrap.o: kern/bootstrap.S inc/mmu.h inc/memlayout.h
+obj/kern/dwarf_lines.o: kern/dwarf_lines.c inc/assert.h inc/stdio.h \
+ inc/stdarg.h inc/dwarf.h inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/string.h inc/error.h
+obj/kern/picirq.o: kern/picirq.c inc/assert.h inc/stdio.h inc/stdarg.h \
+ inc/trap.h inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ kern/picirq.h inc/x86.h
+obj/kern/string.o: lib/string.c inc/string.h inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h
+obj/kern/entry.o: kern/entry.S inc/mmu.h inc/memlayout.h
+obj/kern/printf.o: kern/printf.c inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/stdio.h inc/stdarg.h
+obj/kern/init.o: kern/init.c inc/stdio.h inc/stdarg.h inc/string.h \
+ inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/assert.h inc/uefi.h inc/../LoaderPkg/Include/LoaderParams.h \
+ inc/memlayout.h inc/mmu.h kern/monitor.h kern/tsc.h kern/console.h \
+ kern/pmap.h kern/env.h inc/env.h inc/trap.h kern/cpu.h kern/timer.h \
+ kern/trap.h kern/sched.h kern/picirq.h inc/x86.h kern/kclock.h \
+ kern/kdebug.h
+obj/kern/dwarf.o: kern/dwarf.c inc/assert.h inc/stdio.h inc/stdarg.h \
+ inc/error.h inc/dwarf.h inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/string.h
+obj/kern/readline.o: lib/readline.c inc/stdio.h inc/stdarg.h inc/error.h
+obj/kern/uefi.o: kern/uefi.c inc/error.h inc/stdio.h inc/stdarg.h \
+ inc/memlayout.h inc/types.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdint-gcc.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stdbool.h \
+ /Users/rave/QEMU/JETOS/x86_64-jetos-elf/lib/gcc/x86_64-jetos-elf/8.4.0/include/stddef.h \
+ inc/mmu.h inc/uefi.h inc/../LoaderPkg/Include/LoaderParams.h

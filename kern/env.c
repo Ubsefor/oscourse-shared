@@ -451,25 +451,25 @@ env_pop_tf(struct Trapframe *tf) {
       "sti\n\t"
       "ret\n\t"
       :
-      : [ tf ] "a"(tf),
-        [ rip ] "i"(offsetof(struct Trapframe, tf_rip)),
-        [ rax ] "i"(offsetof(struct Trapframe, tf_regs.reg_rax)),
-        [ rbx ] "i"(offsetof(struct Trapframe, tf_regs.reg_rbx)),
-        [ rcx ] "i"(offsetof(struct Trapframe, tf_regs.reg_rcx)),
-        [ rdx ] "i"(offsetof(struct Trapframe, tf_regs.reg_rdx)),
-        [ rsi ] "i"(offsetof(struct Trapframe, tf_regs.reg_rsi)),
-        [ rdi ] "i"(offsetof(struct Trapframe, tf_regs.reg_rdi)),
-        [ rbp ] "i"(offsetof(struct Trapframe, tf_regs.reg_rbp)),
-        [ rd8 ] "i"(offsetof(struct Trapframe, tf_regs.reg_r8)),
-        [ rd9 ] "i"(offsetof(struct Trapframe, tf_regs.reg_r9)),
-        [ rd10 ] "i"(offsetof(struct Trapframe, tf_regs.reg_r10)),
-        [ rd11 ] "i"(offsetof(struct Trapframe, tf_regs.reg_r11)),
-        [ rd12 ] "i"(offsetof(struct Trapframe, tf_regs.reg_r12)),
-        [ rd13 ] "i"(offsetof(struct Trapframe, tf_regs.reg_r13)),
-        [ rd14 ] "i"(offsetof(struct Trapframe, tf_regs.reg_r14)),
-        [ rd15 ] "i"(offsetof(struct Trapframe, tf_regs.reg_r15)),
-        [ rflags ] "i"(offsetof(struct Trapframe, tf_rflags)),
-        [ rsp ] "i"(offsetof(struct Trapframe, tf_rsp))
+      : [tf] "a"(tf),
+        [rip] "i"(offsetof(struct Trapframe, tf_rip)),
+        [rax] "i"(offsetof(struct Trapframe, tf_regs.reg_rax)),
+        [rbx] "i"(offsetof(struct Trapframe, tf_regs.reg_rbx)),
+        [rcx] "i"(offsetof(struct Trapframe, tf_regs.reg_rcx)),
+        [rdx] "i"(offsetof(struct Trapframe, tf_regs.reg_rdx)),
+        [rsi] "i"(offsetof(struct Trapframe, tf_regs.reg_rsi)),
+        [rdi] "i"(offsetof(struct Trapframe, tf_regs.reg_rdi)),
+        [rbp] "i"(offsetof(struct Trapframe, tf_regs.reg_rbp)),
+        [rd8] "i"(offsetof(struct Trapframe, tf_regs.reg_r8)),
+        [rd9] "i"(offsetof(struct Trapframe, tf_regs.reg_r9)),
+        [rd10] "i"(offsetof(struct Trapframe, tf_regs.reg_r10)),
+        [rd11] "i"(offsetof(struct Trapframe, tf_regs.reg_r11)),
+        [rd12] "i"(offsetof(struct Trapframe, tf_regs.reg_r12)),
+        [rd13] "i"(offsetof(struct Trapframe, tf_regs.reg_r13)),
+        [rd14] "i"(offsetof(struct Trapframe, tf_regs.reg_r14)),
+        [rd15] "i"(offsetof(struct Trapframe, tf_regs.reg_r15)),
+        [rflags] "i"(offsetof(struct Trapframe, tf_rflags)),
+        [rsp] "i"(offsetof(struct Trapframe, tf_rsp))
       : "cc", "memory", "ebx", "ecx", "edx", "esi", "edi");
 #else
 #endif
@@ -486,8 +486,9 @@ void
 env_run(struct Env *e) {
 #ifdef CONFIG_KSPACE
   cprintf("envrun %s: %d\n",
-          e->env_status == ENV_RUNNING ? "RUNNING" :
-                                         e->env_status == ENV_RUNNABLE ? "RUNNABLE" : "(unknown)",
+          e->env_status == ENV_RUNNING  ? "RUNNING" :
+          e->env_status == ENV_RUNNABLE ? "RUNNABLE" :
+                                          "(unknown)",
           ENVX(e->env_id));
 #endif
 

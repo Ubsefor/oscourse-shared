@@ -605,7 +605,7 @@ pml4e_walk(pml4e_t *pml4e, const void *va, int create) {
       return pdpe_walk((pte_t *)KADDR(PTE_ADDR(pml4e[PML4(va)])), va, create);
     }
   }
-  
+
   return NULL;
 }
 
@@ -622,7 +622,7 @@ pdpe_walk(pdpe_t *pdpe, const void *va, int create) {
       np->pp_ref++;
       pdpe[PDPE(va)] = page2pa(np) | PTE_P | PTE_U | PTE_W;
       // return pgdir_walk((pde_t *)page2kva(np), va, create) + PDPE(va);
-      return pgdir_walk((pte_t *) KADDR (PTE_ADDR(pdpe[PDPE(va)])), va, create);
+      return pgdir_walk((pte_t *)KADDR(PTE_ADDR(pdpe[PDPE(va)])), va, create);
     }
   }
   return NULL;
@@ -829,7 +829,7 @@ mmio_map_region(physaddr_t pa, size_t size) {
 void *
 mmio_remap_last_region(physaddr_t pa, void *addr, size_t oldsize, size_t newsize) {
 
-  oldsize               = ROUNDUP((uintptr_t)addr + oldsize, PGSIZE) - (uintptr_t)addr;
+  oldsize = ROUNDUP((uintptr_t)addr + oldsize, PGSIZE) - (uintptr_t)addr;
   if (base - oldsize != (uintptr_t)addr)
     panic("You dare to remap non-last region?!");
   base = (uintptr_t)addr;
@@ -1011,7 +1011,7 @@ check_kern_pml4e(void) {
   // check kernel stack
   for (i = 0; i < KSTKSIZE; i += PGSIZE)
     assert(check_va2pa(pml4e, KSTACKTOP - KSTKSIZE + i) == PADDR(bootstack) + i);
-  
+
   assert(check_va2pa(pml4e, KSTACKTOP - PTSIZE) == ~0);
 
   pdpe_t *pdpe = KADDR(PTE_ADDR(kern_pml4e[1]));

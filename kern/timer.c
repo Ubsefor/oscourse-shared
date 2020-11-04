@@ -120,8 +120,8 @@ acpi_find_table(const char *sign) {
     if (strncmp(krsdp->Signature, "RSD PTR", 8))
       // panic("Invalid RSDP");
 
-    for (size_t i = 0; i < offsetof(RSDP, Length); i++)
-      cksm = (uint8_t)(cksm + ((uint8_t *)krsdp)[i]);
+      for (size_t i = 0; i < offsetof(RSDP, Length); i++)
+        cksm = (uint8_t)(cksm + ((uint8_t *)krsdp)[i]);
     if (cksm)
       panic("Invalid RSDP");
 

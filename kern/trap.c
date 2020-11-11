@@ -3,10 +3,12 @@
 #include <inc/assert.h>
 #include <inc/string.h>
 
+#include <kern/pmap.h>
 #include <kern/trap.h>
 #include <kern/console.h>
 #include <kern/monitor.h>
 #include <kern/env.h>
+#include <kern/syscall.h>
 #include <kern/sched.h>
 #include <kern/kclock.h>
 #include <kern/picirq.h>
@@ -14,6 +16,7 @@
 #include <kern/timer.h>
 
 extern uintptr_t gdtdesc_64;
+static struct Taskstate ts;
 extern struct Segdesc gdt[];
 extern long gdt_pd;
 
@@ -61,6 +64,34 @@ trapname(int trapno) {
   if (trapno >= IRQ_OFFSET && trapno < IRQ_OFFSET + 16)
     return "Hardware Interrupt";
   return "(unknown trap)";
+}
+
+void
+trap_init(void) {
+  // extern struct Segdesc gdt[];
+  // LAB 8: Your code here.
+
+  // Per-CPU setup
+  trap_init_percpu();
+}
+
+// Initialize and load the per-CPU TSS and IDT
+void
+trap_init_percpu(void) {
+  // Setup a TSS so that we get the right stack
+  // when we trap to the kernel.
+  ts.ts_esp0 = KSTACKTOP;
+
+  // Initialize the TSS slot of the gdt.
+  SETTSS((struct SystemSegdesc64 *)(&gdt[(GD_TSS0 >> 3)]), STS_T64A,
+         (uint64_t)(&ts), sizeof(struct Taskstate), 0);
+
+  // Load the TSS selector (like other segment selectors, the
+  // bottom three bits are special; we leave them 0)
+  ltr(GD_TSS0);
+
+  // Load the IDT
+  lidt(&idt_pd);
 }
 
 void
@@ -125,7 +156,30 @@ print_regs(struct PushRegs *regs) {
 
 static void
 trap_dispatch(struct Trapframe *tf) {
+
+  int64_t syscallno, a1, a2, a3, a4, a5, ret;
+  if (tf->tf_trapno == T_SYSCALL) {
+    syscallno           = tf->tf_regs.reg_rax;
+    a1                  = tf->tf_regs.reg_rdx;
+    a2                  = tf->tf_regs.reg_rcx;
+    a3                  = tf->tf_regs.reg_rbx;
+    a4                  = tf->tf_regs.reg_rdi;
+    a5                  = tf->tf_regs.reg_rsi;
+    ret                 = syscall(syscallno, a1, a2, a3, a4, a5);
+    tf->tf_regs.reg_rax = ret;
+    return;
+  }
+
   // Handle processor exceptions.
+  if (tf->tf_trapno == T_PGFLT) {
+    page_fault_handler(tf);
+    return;
+  }
+
+  if (tf->tf_trapno == T_BRKPT) {
+    monitor(tf);
+    return;
+  }
 
   // Handle spurious interrupts
   // The hardware sometimes raises these because of noise on the
@@ -213,4 +267,18 @@ trap(struct Trapframe *tf) {
     env_run(curenv);
   else
     sched_yield();
+}
+
+void
+page_fault_handler(struct Trapframe *tf) {
+  uintptr_t fault_va;
+
+  // Read processor's CR2 register to find the faulting address
+  fault_va = rcr2();
+
+  // Handle kernel-mode page faults.
+
+  // LAB 8: Your code here.
+
+
 }

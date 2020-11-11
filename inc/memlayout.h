@@ -156,6 +156,26 @@
 #define USTACKTOP (UXSTACKTOP - UXSTACKSIZE - PGSIZE)
 // Stack size (variable)
 #define USTACKSIZE (4 * PGSIZE)
+// Max number of open files in the file system at once
+#define MAXOPEN 512
+#define FILEVA  0xD0000000
+
+#ifdef SANITIZE_USER_SHADOW_OFF
+// User stack and some other tables are located at higher addresses, so we need to map a separate shadow for it.
+#define SANITIZE_USER_EXTRA_SHADOW_BASE (((UENVS >> 3) + SANITIZE_USER_SHADOW_OFF) & ~(PGSIZE - 1))
+#define SANITIZE_USER_EXTRA_SHADOW_SIZE ((ULIM - UENVS) >> 3)
+
+#define SANITIZE_USER_STACK_SHADOW_BASE ((((USTACKTOP - USTACKSIZE) >> 3) + SANITIZE_USER_SHADOW_OFF) & ~(PGSIZE - 1))
+#define SANITIZE_USER_STACK_SHADOW_SIZE ((USTACKSIZE + UXSTACKSIZE + PGSIZE) >> 3)
+
+// File system is located at another specific address space
+#define SANITIZE_USER_FS_SHADOW_BASE ((FILEVA >> 3) + SANITIZE_USER_SHADOW_OFF)
+#define SANITIZE_USER_FS_SHADOW_SIZE ((((MAXOPEN * PGSIZE) >> 3) + (PGSIZE - 1)) & ~(PGSIZE - 1))
+
+// UVPT is located at another specific address space
+#define SANITIZE_USER_VPT_SHADOW_BASE ((UVPT >> 3) + SANITIZE_USER_SHADOW_OFF)
+#define SANITIZE_USER_VPT_SHADOW_SIZE ((((UVPTSIZE + UVPDSIZE + UVPDESIZE + UVPML4SIZE) >> 3) + (PGSIZE - 1)) & ~(PGSIZE - 1))
+#endif
 
 // Where user programs generally begin
 #define UTEXT (4 * PTSIZE)

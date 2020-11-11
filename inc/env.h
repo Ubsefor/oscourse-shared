@@ -55,6 +55,11 @@ struct Env {
   enum EnvType env_type;   // Indicates special system environments
   unsigned env_status;     // Status of the environment
   uint32_t env_runs;       // Number of times environment has run
+  uint8_t *binary;         // Pointer to process ELF image in kernel memory
+
+  // Address space
+  pml4e_t *env_pml4e; // Kernel virtual address of page dir
+  physaddr_t env_cr3;
 };
 
 #endif // !JOS_INC_ENV_H

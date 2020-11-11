@@ -149,6 +149,7 @@ i386_init(void) {
 
   // user environment initialization functions
   env_init();
+  trap_init();
 
   // choose the timer used for scheduling: hpet or pit
   timers_schedule("hpet0");
@@ -162,6 +163,18 @@ i386_init(void) {
   // ENV_CREATE_KERNEL_TYPE(prog_test4);
   // ENV_CREATE_KERNEL_TYPE(prog_test5);
   // ENV_CREATE_KERNEL_TYPE(prog_test6);
+  ENV_CREATE_KERNEL_TYPE(prog_test3);
+  ENV_CREATE_KERNEL_TYPE(prog_test4);
+  ENV_CREATE_KERNEL_TYPE(prog_test5);
+  ENV_CREATE_KERNEL_TYPE(prog_test6);
+#else
+#if defined(TEST)
+  // Don't touch -- used by grading script!
+  ENV_CREATE(TEST, ENV_TYPE_USER);
+#else
+  // Touch all you want.
+  ENV_CREATE(user_hello, ENV_TYPE_USER);
+#endif // TEST*
 #endif
 
   // Schedule and run the first user environment!

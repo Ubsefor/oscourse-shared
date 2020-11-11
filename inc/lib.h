@@ -8,11 +8,22 @@
 #define JOS_INC_LIB_H 1
 
 #include <inc/types.h>
+#include <inc/stdio.h>
 #include <inc/stdarg.h>
 #include <inc/string.h>
 #include <inc/error.h>
+#include <inc/assert.h>
 #include <inc/env.h>
 #include <inc/memlayout.h>
+#include <inc/syscall.h>
+
+#ifdef SANITIZE_USER_SHADOW_BASE
+// asan unpoison routine used for whitelisting regions.
+void platform_asan_unpoison(void *addr, uint32_t size);
+// non-sanitized memcpy and memset allow us to access "invalid" areas for extra poisoning.
+void *__nosan_memset(void *, int, size_t);
+void *__nosan_memcpy(void *dst, const void *src, size_t sz);
+#endif
 
 #define USED(x) (void)(x)
 
@@ -25,8 +36,17 @@ extern const volatile struct Env *thisenv;
 extern const volatile struct Env envs[NENV];
 //extern const volatile struct PageInfo pages[];
 
+// exit.c
+void exit(void);
+
 // readline.c
 char *readline(const char *buf);
+
+// syscall.c
+void sys_cputs(const char *string, size_t len);
+int sys_cgetc(void);
+envid_t sys_getenvid(void);
+int sys_env_destroy(envid_t);
 
 /* File open modes */
 #define O_RDONLY  0x0000 /* open for reading only */

@@ -50,6 +50,10 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
   if (!addr) {
     return 0;
   }
+  
+  // Temporarily load kernel cr3 and return back once done.
+  // Make sure that you fully understand why it is necessary.
+  // LAB 8: Your code here.
 
   struct Dwarf_Addrs addrs;
   if (addr <= ULIM) {

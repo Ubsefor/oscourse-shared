@@ -209,18 +209,18 @@ static uint64_t freq      = 0;
 void
 timer_start(const char *name) {
   // DELETED in LAB 5
-  (void)timer_started;
-  (void)timer_id;
-  (void)timer;
+  (void) timer_started;
+  (void) timer_id;
+  (void) timer;
   // DELETED in LAB 5 end
 
   // LAB 5 code
   for (int i = 0; i < MAX_TIMERS; i++) {
     if (timertab[i].timer_name && !strcmp(timertab[i].timer_name, name)) {
-      timer_id      = i;
+      timer_id = i;
       timer_started = 1;
-      timer         = read_tsc();
-      freq          = timertab[timer_id].get_cpu_freq();
+      timer = read_tsc();
+      freq = timertab[timer_id].get_cpu_freq();
       return;
     }
   }
@@ -239,7 +239,7 @@ timer_stop(void) {
 
   print_time((read_tsc() - timer) / freq);
 
-  timer_id      = -1;
+  timer_id = -1;
   timer_started = 0;
   // LAB 5 code end
 }

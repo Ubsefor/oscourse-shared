@@ -90,6 +90,7 @@ acpi_enable(void) {
   }
 }
 
+
 // Obtain RSDP ACPI table address from bootloader.
 RSDP *
 get_rsdp(void) {
@@ -179,6 +180,8 @@ acpi_find_table(const char *sign) {
 
   return NULL;
 }
+
+// LAB 5 code end
 
 // LAB 5: your code here
 // Obtain and map FADT ACPI table address.
@@ -305,10 +308,10 @@ hpet_get_main_cnt(void) {
 // Hint: to be able to use HPET as PIT replacement consult
 // LegacyReplacement functionality in HPET spec.
 
-#define HPET_TN_TYPE_CNF    (1 << 3)
+#define HPET_TN_TYPE_CNF (1 << 3)
 #define HPET_TN_INT_ENB_CNF (1 << 2)
 #define HPET_TN_VAL_SET_CNF (1 << 6)
-#define HPET_LEG_RT_CNF     (1 << 1)
+#define HPET_LEG_RT_CNF (1 << 1)
 
 void
 hpet_enable_interrupts_tim0(void) {
@@ -318,6 +321,7 @@ hpet_enable_interrupts_tim0(void) {
   hpetReg->TIM0_COMP = hpet_get_main_cnt() + Peta / 2 / hpetFemto;
   hpetReg->TIM0_COMP = Peta / 2 / hpetFemto;
   irq_setmask_8259A(irq_mask_8259A & ~(1 << IRQ_TIMER));
+  // LAB 5 code end
 }
 
 void
@@ -328,15 +332,22 @@ hpet_enable_interrupts_tim1(void) {
   hpetReg->TIM1_COMP = hpet_get_main_cnt() + 3 * Peta / 2 / hpetFemto;
   hpetReg->TIM1_COMP = 3 * Peta / 2 / hpetFemto;
   irq_setmask_8259A(irq_mask_8259A & ~(1 << IRQ_CLOCK));
+  // LAB 5 code end
 }
 
 void
 hpet_handle_interrupts_tim0(void) {
+  // LAB 5 code
+
+  // LAB 5 code end
   pic_send_eoi(IRQ_TIMER);
 }
 
 void
 hpet_handle_interrupts_tim1(void) {
+  // LAB 5 code
+
+  // LAB 5 code end
   pic_send_eoi(IRQ_CLOCK);
 }
 
@@ -346,12 +357,12 @@ hpet_handle_interrupts_tim1(void) {
 // about pause instruction.
 uint64_t
 hpet_cpu_frequency(void) {
-  // LAB 5 Your code here.
+  // LAB 5 code
   uint64_t time_res = 100;
   uint64_t delta = 0, target = hpetFreq / time_res;
 
   uint64_t tick0 = hpet_get_main_cnt();
-  uint64_t tsc0  = read_tsc();
+  uint64_t tsc0 = read_tsc();
   do {
     asm("pause");
     delta = hpet_get_main_cnt() - tick0;
@@ -359,7 +370,9 @@ hpet_cpu_frequency(void) {
 
   uint64_t tsc1 = read_tsc();
 
-  return (tsc1 - tsc0) * time_res;
+  return (tsc1 - tsc0) * time_res; 
+  // LAB 5 code end
+  // return 0;
 }
 
 uint32_t
@@ -376,9 +389,9 @@ pmtimer_get_timeval(void) {
 // can be 24-bit or 32-bit.
 uint64_t
 pmtimer_cpu_frequency(void) {
-
+  // LAB 5 code
   uint32_t time_res = 100;
-  uint32_t tick0    = pmtimer_get_timeval();
+  uint32_t tick0 = pmtimer_get_timeval();
   uint64_t delta = 0, target = PM_FREQ / time_res;
 
   uint64_t tsc0 = read_tsc();
@@ -386,7 +399,7 @@ pmtimer_cpu_frequency(void) {
   do {
     asm("pause");
     uint32_t tick1 = pmtimer_get_timeval();
-    delta          = tick1 - tick0;
+    delta = tick1 - tick0;
     if (-delta <= 0xFFFFFF) {
       delta += 0xFFFFFF;
     } else if (tick0 > tick1) {
@@ -397,4 +410,6 @@ pmtimer_cpu_frequency(void) {
   uint64_t tsc1 = read_tsc();
 
   return (tsc1 - tsc0) * PM_FREQ / delta;
+  // LAB 5 code end
+  // return 0;
 }

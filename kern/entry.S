@@ -8,8 +8,11 @@
 
 .globl entry
 entry:
+  # LAB 4 code
   # маскирование прерываний
   cli
+  # LAB 4 code end
+
   # Save LoadParams in uefi_lp.
   movq %rcx, uefi_lp(%rip)
 
@@ -85,11 +88,14 @@ sys_exit:
   # LAB 4 code
   # маскирование прерываний
   cli
+  # LAB 4 code end
 
   # LAB 3 code
   leaq bootstacktop(%rip),%rsp
   xor %ebp, %ebp
   call csys_exit
+  # LAB 3 code end
+  
   jmp .
 #endif
 

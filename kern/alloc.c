@@ -34,8 +34,9 @@ test_alloc(uint8_t nbytes) {
   unsigned nunits;
 
   // Make allocator thread-safe with the help of spin_lock/spin_unlock.
-  // LAB 5 Your code here.
+  // LAB 5 code
   spin_lock(&kernel_lock);
+  // LAB 5 code end
 
   nunits = (nbytes + sizeof(Header) - 1) / sizeof(Header) + 1;
 
@@ -63,8 +64,10 @@ test_alloc(uint8_t nbytes) {
       return (void *)(p + 1);
     }
     if (p == freep) { /* wrapped around free list */
-      // LAB 5 Your code here.
+
+      // LAB 5 code
       spin_unlock(&kernel_lock);
+      // LAB 5 code end
 
       return NULL;
     }
@@ -78,8 +81,9 @@ test_free(void *ap) {
   bp = (Header *)ap - 1; /* point to block header */
 
   // Make allocator thread-safe with the help of spin_lock/spin_unlock.
-  // LAB 5 Your code here.
+  // LAB 5 code
   spin_lock(&kernel_lock);
+  // LAB 5 code end
 
   for (p = freep; !(bp > p && bp < p->s.next); p = p->s.next)
     if (p >= p->s.next && (bp > p || bp < p->s.next))
@@ -106,6 +110,7 @@ test_free(void *ap) {
 
   check_list();
 
-  // LAB 5 Your code here.
+  // LAB 5 code
   spin_unlock(&kernel_lock);
+  // LAB 5 code end
 }

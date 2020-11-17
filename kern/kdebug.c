@@ -8,7 +8,6 @@
 #include <kern/kdebug.h>
 #include <kern/pmap.h>
 #include <kern/env.h>
-#include <kern/kdebug.h>
 #include <inc/uefi.h>
 
 void
@@ -39,6 +38,12 @@ load_kernel_dwarf_info(struct Dwarf_Addrs *addrs) {
 int
 debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
   int code = 0;
+
+  // LAB 8 code
+  // const struct Stab *stabs, *stab_end;
+	// const char *stabstr, *stabstr_end;
+  // LAB 8 code end
+
   // Initialize *info
   strcpy(info->rip_file, "<unknown>");
   info->rip_line = 0;
@@ -57,7 +62,15 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
 
   struct Dwarf_Addrs addrs;
   if (addr <= ULIM) {
-    panic("Can't search for user-level addresses yet!");
+
+    // LAB 8 code
+    uint64_t tmp_cr3 = rcr3();
+    lcr3(PADDR(kern_pml4e));
+    load_kernel_dwarf_info(&addrs);
+    lcr3(tmp_cr3);
+    // LAB 8 code end
+
+    // panic("Can't search for user-level addresses yet!");
   } else {
     load_kernel_dwarf_info(&addrs);
   }
@@ -77,21 +90,23 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
   if (code < 0) {
     return code;
   }
-
-  // LAB2 Your code here.
-
+  
+  // LAB 2 code
+    
   // Find line number corresponding to given address.
   // Hint: note that we need the address of `call` instruction, but rip holds
   // address of the next instruction, so we should substract 5 from it.
   // Hint: use line_for_address from kern/dwarf_lines.c
-
+    
   int lineno_store;
-  addr           = addr - 5;
-  code           = line_for_address(&addrs, addr, line_offset, &lineno_store);
+  addr = addr - 5;
+  code = line_for_address(&addrs, addr, line_offset, &lineno_store);
   info->rip_line = lineno_store;
   if (code < 0) {
     return code;
   }
+    
+  //LAB 2 code end
 
   buf  = &tmp_buf;
   code = function_by_info(&addrs, addr, offset, buf, sizeof(char *), &info->rip_fn_addr);
@@ -108,24 +123,29 @@ find_function(const char *const fname) {
   // There are two functions for function name lookup.
   // address_by_fname, which looks for function name in section .debug_pubnames
   // and naive_address_by_fname which performs full traversal of DIE tree.
-  // LAB 3 Your code here.
-
-#ifdef CONFIG_KSPACE
+    
+  // LAB 3 code
+    
+  // LAB 6 code
+  #ifdef CONFIG_KSPACE
+  // LAB 6 code end
   struct {
     const char *name;
     uintptr_t addr;
   } scentry[] = {
-      {"sys_yield", (uintptr_t)sys_yield},
-      {"sys_exit", (uintptr_t)sys_exit},
+    { "sys_yield", (uintptr_t)sys_yield },
+    { "sys_exit", (uintptr_t)sys_exit },
   };
 
-  for (size_t i = 0; i < sizeof(scentry) / sizeof(*scentry); i++) {
+  for (size_t i = 0; i < sizeof(scentry)/sizeof(*scentry); i++) {
     if (!strcmp(scentry[i].name, fname)) {
       return scentry[i].addr;
     }
   }
-#endif
-
+  // LAB 6 code
+  #endif
+  // LAB 6 code end
+    
   struct Dwarf_Addrs addrs;
   load_kernel_dwarf_info(&addrs);
   uintptr_t offset = 0;
@@ -137,6 +157,7 @@ find_function(const char *const fname) {
   if (!naive_address_by_fname(&addrs, fname, &offset)) {
     return offset;
   }
+  // LAB 3 code end
 
   return 0;
 }

@@ -159,23 +159,34 @@ i386_init(void) {
   // Touch all you want.
   ENV_CREATE_KERNEL_TYPE(prog_test1);
   ENV_CREATE_KERNEL_TYPE(prog_test2);
-  // ENV_CREATE_KERNEL_TYPE(prog_test3);
-  // ENV_CREATE_KERNEL_TYPE(prog_test4);
-  // ENV_CREATE_KERNEL_TYPE(prog_test5);
-  // ENV_CREATE_KERNEL_TYPE(prog_test6);
   ENV_CREATE_KERNEL_TYPE(prog_test3);
   ENV_CREATE_KERNEL_TYPE(prog_test4);
   ENV_CREATE_KERNEL_TYPE(prog_test5);
   ENV_CREATE_KERNEL_TYPE(prog_test6);
 #else
+#endif
+
 #if defined(TEST)
   // Don't touch -- used by grading script!
+  #define S(x) #x
+  #define SS(x) S(x)
+  cprintf("\n\nTEST: %s\n", SS(TEST));
+
+  cprintf("A Test called!\n\n");
   ENV_CREATE(TEST, ENV_TYPE_USER);
-#else
+  cprintf("Lemme test it...\n");
+
+  #else
   // Touch all you want.
-  ENV_CREATE(user_hello, ENV_TYPE_USER);
+
+  #define S(x) #x
+  #define SS(x) S(x)
+  cprintf("\n\nTEST: %s\n", SS(TEST));
+
+  cprintf("Hey boy\n");
+  ENV_CREATE(user_evilhello, ENV_TYPE_USER);
+  cprintf("Im not running your tests for you today!\n");
 #endif // TEST*
-#endif
 
   // Schedule and run the first user environment!
   sched_yield();

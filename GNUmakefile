@@ -359,9 +359,9 @@ $(JOS_ESP)/EFI/BOOT/$(JOS_BOOTER): $(JOS_LOADER)
 	cp $(JOS_LOADER) $(JOS_ESP)/EFI/BOOT/$(JOS_BOOTER)
 	# cp $(JOSLOADER)/Loader.debug $(UEFIDIR)/EFI/BOOT/BOOTIA32.DEBUG
 
-pre-qemu: $(IMAGES) .gdbinit
+pre-qemu: .gdbinit
 
-qemu: pre-qemu
+qemu: $(IMAGES) pre-qemu
 	$(QEMU) $(QEMUOPTS)
 
 qemu-oscheck: $(IMAGES) pre-qemu

@@ -24,7 +24,6 @@ sys_cputs(const char *s, size_t len) {
 
 	// Print the string supplied by the user.
 	cprintf("%.*s", (int)len, s);
-  // LAB 8 code end
 }
 
 // Read a character from the system console without blocking.
@@ -33,7 +32,6 @@ static int
 sys_cgetc(void) {
   // LAB 8 code
   return cons_getc();
-  // LAB 8 code end
 }
 
 // Returns the current environment's envid.
@@ -41,7 +39,6 @@ static envid_t
 sys_getenvid(void) {
   // LAB 8 code
   return curenv->env_id;
-  // LAB 8 code end
 }
 
 // Destroy a given environment (possibly the currently running environment).
@@ -63,7 +60,6 @@ sys_env_destroy(envid_t envid) {
 		cprintf("[%08x] destroying %08x\n", curenv->env_id, e->env_id);
 	env_destroy(e);
 	return 0;
-  // LAB 8 code end
 }
 
 // Dispatches to the correct kernel function, passing the arguments.
@@ -71,8 +67,7 @@ uintptr_t
 syscall(uintptr_t syscallno, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5) {
   // Call the function corresponding to the 'syscallno' parameter.
   // Return any appropriate return value.
-
-  // LAB 8 code
+  // LAB 8
   if (syscallno == SYS_cputs) {
     sys_cputs((const char *) a1, (size_t) a2);
     return 0;
@@ -85,7 +80,5 @@ syscall(uintptr_t syscallno, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t
   } else {
     return -E_INVAL;
   }
-  // LAB 8 code end
-  
-  // return -E_INVAL;
+  return -E_INVAL;
 }

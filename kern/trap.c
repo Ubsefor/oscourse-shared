@@ -331,6 +331,7 @@ page_fault_handler(struct Trapframe *tf) {
 		curenv->env_id, fault_va, tf->tf_rip);
 	print_trapframe(tf);
 	env_destroy(curenv);
+  
   // LAB 8 code end
 
 }

@@ -325,7 +325,6 @@ region_alloc(struct Env *e, void *va, size_t len) {
     page_insert(e->env_pml4e, pi, va, PTE_U | PTE_W);
     va += PGSIZE;
   }
-  // LAB 8 code end
 }
 
 #ifdef SANITIZE_USER_SHADOW_BASE
@@ -463,8 +462,7 @@ load_icode(struct Env *e, uint8_t *binary) {
   // из чего состоит Elf и Proghdr смотри в Elf64.h. Elf - это структура выполняемого фаила
   struct Elf *elf = (struct Elf *)binary; // binary приодится к типу указателя на структуру ELF
   if (elf->e_magic != ELF_MAGIC) {
-    cprintf("Unexpected ELF format\n");
-    return;
+    panic("Unexpected ELF format! What magic is this?\n");
   }
 
   struct Proghdr *ph = (struct Proghdr *)(binary + elf->e_phoff); // Proghdr = prog header. Он лежит со смещением elf->e_phoff относительно начала фаила
@@ -479,9 +477,9 @@ load_icode(struct Env *e, uint8_t *binary) {
       size_t memsz  = ph[i].p_memsz;
       size_t filesz = MIN(ph[i].p_filesz, memsz);
 
-      region_alloc(e, (void *)dst, filesz);
+      region_alloc(e, (void*) dst, memsz);
 
-      memcpy(dst, src, filesz);                // копируем в dst (дистинейшн) src (код) размера filesz
+      memcpy(dst, src, filesz);                // копируем в dst <- src  размера filesz
       memset(dst + filesz, 0, memsz - filesz); // обнуление памяти по адресу dst + filesz, где количество нулей = memsz - filesz. Т.е. зануляем всю выделенную память сегмента кода, оставшуюяся после копирования src. Возможно, эта строка не нужна
     }
   }
@@ -496,6 +494,14 @@ load_icode(struct Env *e, uint8_t *binary) {
   // LAB 8 code
   region_alloc(e, (void *) (USTACKTOP - USTACKSIZE), USTACKSIZE);
   // LAB 8 code end
+
+#ifdef SANITIZE_USER_SHADOW_BASE
+  region_alloc(e, (void*) SANITIZE_USER_SHADOW_BASE, SANITIZE_USER_SHADOW_SIZE);
+  region_alloc(e, (void*) SANITIZE_USER_EXTRA_SHADOW_BASE, SANITIZE_USER_EXTRA_SHADOW_SIZE);
+  region_alloc(e, (void*) SANITIZE_USER_FS_SHADOW_BASE, SANITIZE_USER_FS_SHADOW_SIZE);
+  region_alloc(e, (void*) SANITIZE_USER_STACK_SHADOW_BASE, SANITIZE_USER_STACK_SHADOW_SIZE);
+  region_alloc(e, (void*) SANITIZE_USER_VPT_SHADOW_BASE, SANITIZE_USER_VPT_SHADOW_SIZE);
+#endif
 }
 
 //

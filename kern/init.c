@@ -167,7 +167,9 @@ i386_init(void) {
 #endif
 
 #if defined(TEST)
+
   // Don't touch -- used by grading script!
+
   #define S(x) #x
   #define SS(x) S(x)
   cprintf("\n\nTEST: %s\n", SS(TEST));
@@ -183,9 +185,10 @@ i386_init(void) {
   #define SS(x) S(x)
   cprintf("\n\nTEST: %s\n", SS(TEST));
 
-  cprintf("Hey boy\n");
-  ENV_CREATE(user_evilhello, ENV_TYPE_USER);
+  cprintf("Hey\n");
+  ENV_CREATE(user_hello, ENV_TYPE_USER);
   cprintf("Im not running your tests for you today!\n");
+
 #endif // TEST*
 
   // Schedule and run the first user environment!

@@ -61,16 +61,20 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
   // LAB 8: Your code here.
 
   struct Dwarf_Addrs addrs;
+  // LAB 8 code
+  uint64_t tmp_cr3 = rcr3();
+  lcr3(PADDR(kern_pml4e));
+  // LAB 8 code end
   if (addr <= ULIM) {
 
     // LAB 8 code
-    uint64_t tmp_cr3 = rcr3();
-    lcr3(PADDR(kern_pml4e));
-    load_kernel_dwarf_info(&addrs);
-    lcr3(tmp_cr3);
+    // uint64_t tmp_cr3 = rcr3();
+    // lcr3(PADDR(kern_pml4e));
+    // load_kernel_dwarf_info(&addrs);
+    // lcr3(tmp_cr3);
     // LAB 8 code end
 
-    // panic("Can't search for user-level addresses yet!");
+    panic("Can't search for user-level addresses yet!");
   } else {
     load_kernel_dwarf_info(&addrs);
   }
@@ -80,6 +84,9 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
   Dwarf_Off offset = 0, line_offset = 0;
   code = info_by_address(&addrs, addr, &offset);
   if (code < 0) {
+    // LAB 8 code
+    lcr3(tmp_cr3);
+    // LAB 8 code end
     return code;
   }
   char *tmp_buf;
@@ -88,6 +95,9 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
   code = file_name_by_info(&addrs, offset, buf, sizeof(char *), &line_offset);
   strncpy(info->rip_file, tmp_buf, 256);
   if (code < 0) {
+    // LAB 8 code
+    lcr3(tmp_cr3);
+    // LAB 8 code end
     return code;
   }
   
@@ -103,6 +113,9 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
   code = line_for_address(&addrs, addr, line_offset, &lineno_store);
   info->rip_line = lineno_store;
   if (code < 0) {
+    // LAB 8 code
+    lcr3(tmp_cr3);
+    // LAB 8 code end
     return code;
   }
     
@@ -113,8 +126,14 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
   strncpy(info->rip_fn_name, tmp_buf, 256);
   info->rip_fn_namelen = strnlen(info->rip_fn_name, 256);
   if (code < 0) {
+    // LAB 8 code
+    lcr3(tmp_cr3);
+    // LAB 8 code end
     return code;
   }
+  // LAB 8 code
+  lcr3(tmp_cr3);
+  // LAB 8 code end
   return 0;
 }
 

@@ -34,10 +34,6 @@ EFI_MEMORY_DESCRIPTOR *mmap_base = NULL;
 EFI_MEMORY_DESCRIPTOR *mmap_end  = NULL;
 size_t mem_map_size              = 0;
 
-void noop_dbg(){
-  ;
-}
-
 // --------------------------------------------------------------
 // Detect machine's physical memory setup.
 // --------------------------------------------------------------
@@ -264,7 +260,8 @@ mem_init(void) {
   // LAB 8 code 
   envs = (struct Env *)boot_alloc(sizeof(* envs) * NENV);
 	memset(envs, 0, sizeof(*envs) * NENV);
-  
+  // LAB 8 code end
+
   //////////////////////////////////////////////////////////////////////
   // Now that we've allocated the initial kernel data structures, we set
   // up the list of free physical pages. Once we've done so, all further
@@ -289,6 +286,7 @@ mem_init(void) {
 
   // LAB 7 code
   boot_map_region(kern_pml4e, UPAGES, ROUNDUP(npages * sizeof(*pages), PGSIZE), PADDR(pages), PTE_U | PTE_P);
+  // LAB 7 code end
 
   //////////////////////////////////////////////////////////////////////
   // Map the 'envs' array read-only by the user at linear address UENVS
@@ -299,7 +297,8 @@ mem_init(void) {
 
   // LAB 8 code
   boot_map_region(kern_pml4e, UENVS, ROUNDUP(NENV * sizeof(*envs), PGSIZE), PADDR(envs), PTE_U | PTE_P);
-  
+  // LAB 8 code end
+
   //////////////////////////////////////////////////////////////////////
   // Use the physical memory that 'bootstack' refers to as the kernel
   // stack.  The kernel stack grows down from virtual address KSTACKTOP.
@@ -313,6 +312,7 @@ mem_init(void) {
 
   // LAB 7 code
   boot_map_region(kern_pml4e, KSTACKTOP - KSTKSIZE, KSTACKTOP - (KSTACKTOP - KSTKSIZE), PADDR(bootstack), PTE_W | PTE_P);
+  // LAB 7 code end
 
   // Additionally map stack to lower 32-bit addresses.
   boot_map_region(kern_pml4e, X86ADDR(KSTACKTOP - KSTKSIZE), KSTKSIZE, PADDR(bootstack), PTE_P | PTE_W);
@@ -327,6 +327,7 @@ mem_init(void) {
 
   // LAB 7 code
   boot_map_region(kern_pml4e, KERNBASE, npages * PGSIZE, 0, PTE_W | PTE_P);
+  // LAB 7 code end
 
   // Additionally map kernel to lower 32-bit addresses. Assumes kernel should not exceed 50 mb.
   size_to_alloc = MIN(0x3200000, npages * PGSIZE);
@@ -618,6 +619,9 @@ pml4e_walk(pml4e_t *pml4e, const void *va, int create) {
     }
 	}
 	return NULL;
+  // LAB 7 code end
+
+  //return NULL;
 }
 
 pte_t *
@@ -636,6 +640,9 @@ pdpe_walk(pdpe_t *pdpe, const void *va, int create) {
     }
 	}
 	return NULL;
+  // LAB 7 code end
+
+  //return NULL;
 }
 
 pte_t *
@@ -654,6 +661,9 @@ pgdir_walk(pde_t *pgdir, const void *va, int create) {
     }
 	}
 	return NULL;
+  // LAB 7 code end
+
+  //return NULL;
 }
 
 //
@@ -674,6 +684,7 @@ boot_map_region(pml4e_t *pml4e, uintptr_t va, size_t size, physaddr_t pa, int pe
   for (i = 0; i < size; i += PGSIZE) {
 		*pml4e_walk(pml4e, (void *)(va + i), 1) = (pa + i) | perm | PTE_P;
 	}
+  // LAB 7 code end
 }
 
 //
@@ -878,27 +889,25 @@ static uintptr_t user_mem_check_addr;
 int
 user_mem_check(struct Env *env, const void *va, size_t len, int perm) {
   // LAB 8 code
+  perm |= PTE_P;
+  const void * end = va + len;
+  const void * va2 = va;
 
-  perm = perm | PTE_P;
-
-
-  const void *end = va + len;
-  const void *va_b = va;
-  va = (void*) ROUNDDOWN(va, PGSIZE);
-  while (va < end)
-  {
-    pte_t *pte = pml4e_walk(env->env_pml4e, va, 0);
-    if (!pte || (*pte & perm) != perm ){
-      user_mem_check_addr = (uintptr_t) MAX(va,va_b);
+  va = (void *)ROUNDDOWN(va, PGSIZE);
+  while (va < end) {
+    pte_t * pte = pml4e_walk(env->env_pml4e, va, 0);
+    if (!pte || (*pte & perm) != perm) {
+      user_mem_check_addr = (uintptr_t)MAX(va, va2);
       return -E_FAULT;
     }
     va += PGSIZE;
   }
-  
-  if ((uintptr_t) end > ULIM){
-    user_mem_check_addr = MAX(ULIM, (uintptr_t)va_b);
+
+  if ((uintptr_t)end > ULIM) {
+    user_mem_check_addr = MAX(ULIM, (uintptr_t)va2);
     return -E_FAULT;
   }
+  // LAB 8 code end
 
   return 0;
 }
@@ -912,9 +921,7 @@ user_mem_check(struct Env *env, const void *va, size_t len, int perm) {
 //
 void
 user_mem_assert(struct Env *env, const void *va, size_t len, int perm) {
-  int t = user_mem_check(env, va, len, perm | PTE_U | PTE_P);
-  // cprintf("%d user mem check\n %d\n", t, -E_FAULT);
-  if (t < 0) {
+  if (user_mem_check(env, va, len, perm | PTE_U) < 0) {
     cprintf("[%08x] user_mem_check assertion failure for va %016lx\n",
             env->env_id, (unsigned long)user_mem_check_addr);
     env_destroy(env); // may not return

@@ -88,6 +88,24 @@ KERN_BINFILES :=	user/hello \
 			user/faultreadkernel \
 			user/faultwrite \
 			user/faultwritekernel \
+			user/idle \
+			user/yield \
+			user/dumbfork \
+			user/stresssched \
+			user/faultdie \
+			user/faultregs \
+			user/faultalloc \
+			user/faultallocbad \
+			user/faultnostack \
+			user/faultbadhandler \
+			user/faultevilhandler \
+			user/forktree \
+			user/spin \
+			user/fairness \
+			user/pingpong \
+			user/pingpongs \
+			user/primes \
+			user/memlayout \
 			user/bounds \
 			user/implicitconv \
 			user/signedoverflow

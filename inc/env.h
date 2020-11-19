@@ -27,7 +27,7 @@ extern physaddr_t kern_cr3;
 // envid_ts less than 0 signify errors.  The envid_t == 0 is special, and
 // stands for the current environment.
 
-#define LOG2NENV    5
+#define LOG2NENV    10
 #define NENV        (1 << LOG2NENV)
 #define ENVX(envid) ((envid) & (NENV - 1))
 
@@ -60,6 +60,16 @@ struct Env {
   // Address space
   pml4e_t *env_pml4e; // Kernel virtual address of page dir
   physaddr_t env_cr3;
+
+  // Exception handling
+  void *env_pgfault_upcall; // Page fault upcall entry point
+
+  // Lab 9 IPC
+  bool env_ipc_recving;   // Env is blocked receiving
+  void *env_ipc_dstva;    // VA at which to map received page
+  uint32_t env_ipc_value; // Data value sent to us
+  envid_t env_ipc_from;   // envid of the sender
+  int env_ipc_perm;       // Perm of page mapping received
 };
 
 #endif // !JOS_INC_ENV_H

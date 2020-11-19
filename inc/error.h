@@ -17,6 +17,9 @@ enum {
   E_INVALID_EXE = 8, // Invalid executable
   E_NO_SYS      = 9, // Unimplemented system call
 
+  E_IPC_NOT_RECV = 10, // Attempt to send to env that is not recving
+  E_EOF          = 11, // Unexpected end of file
+
   MAXERROR
 };
 

@@ -2,6 +2,7 @@
 
 #include <inc/string.h>
 #include <inc/lib.h>
+extern void _pgfault_upcall(void);
 
 // PTE_COW marks copy-on-write page table entries.
 // It is one of the bits explicitly allocated to user processes (PTE_AVAIL).
@@ -22,7 +23,8 @@ pgfault(struct UTrapframe *utf) {
   //   Use the read-only page table mappings at uvpt
   //   (see <inc/memlayout.h>).
 
-  // LAB 9 code
+  // LAB 9: Your code here.
+
   void *addr = (void *) utf->utf_fault_va;
   addr=addr;
 	uint64_t err = utf->utf_err;
@@ -30,9 +32,8 @@ pgfault(struct UTrapframe *utf) {
   int r;
 
   if (!((err & FEC_WR) && (uvpt[PGNUM(addr)] & PTE_COW))) {
-    panic("Not a WR or not a COW page! va: %lx err: %lx\n", (uint64_t)addr, err);
+    panic("Not a WR or not a COW page! va: %lx err: %lx\n", (uint64_t) addr, err);
   }
-  // LAB 9 code end
 
   // Allocate a new page, map it at a temporary location (PFTEMP),
   // copy the data from the old page to the new page, then move the new
@@ -42,25 +43,25 @@ pgfault(struct UTrapframe *utf) {
   //   No need to explicitly delete the old page's mapping.
   //   Make sure you DO NOT use sanitized memcpy/memset routines when using UASAN.
 
-  // LAB 9 code
+  // LAB 9: Your code here.
   if ((r = sys_page_alloc(0, (void *) PFTEMP, PTE_W)) < 0) {
-		panic("pgfault error: sys_page_alloc: %i\n", r);
+    panic("pgfault error: sys_page_alloc: %i\n", r);
   }
 
-#ifdef SANITIZE_USER_SHADOW_BASE 
-  __nosan_memcpy((void *) PFTEMP, ROUNDDOWN(addr, PGSIZE), PGSIZE);
-#else
-	memmove((void *) PFTEMP, ROUNDDOWN(addr, PGSIZE), PGSIZE);
-#endif
+  #ifdef SANITIZE_USER_SHADOW_BASE 
+    __nosan_memcpy((void *) PFTEMP, ROUNDDOWN(addr, PGSIZE), PGSIZE);
+  #else
+    memmove((void *) PFTEMP, ROUNDDOWN(addr, PGSIZE), PGSIZE);
+  #endif
 
-	if ((r = sys_page_map(0, (void *) PFTEMP, 0, ROUNDDOWN(addr, PGSIZE), PTE_W)) < 0) {
-	  panic("pgfault error: sys_page_map: %i\n", r);
-	}
+  if ((r = sys_page_map(0, (void *) PFTEMP, 0, ROUNDDOWN(addr, PGSIZE), PTE_W)) < 0) {
+    panic("pgfault error: sys_page_map: %i\n", r);
+  }
 
-	if ((r = sys_page_unmap(0, (void *) PFTEMP)) < 0) {
-	  panic("pgfault error: sys_page_unmap: %i\n", r);
-	}
-  // LAB 9 code end
+  if ((r = sys_page_unmap(0, (void *) PFTEMP)) < 0) {
+    panic("pgfault error: sys_page_unmap: %i\n", r);
+  }
+
 }
 
 //
@@ -75,25 +76,15 @@ pgfault(struct UTrapframe *utf) {
 // It is also OK to panic on error.
 //
 static int
-duppage(envid_t envid, unsigned pn) {
-  // LAB 9 code
-  void *addr = (void *)(uint64_t)(pn * PGSIZE);
-  int r;
-  if ((uvpt[pn] & PTE_COW) || (uvpt[pn] & PTE_W)) {
-    if ((r = sys_page_map(0, addr, envid, addr, PTE_COW)) < 0) {
-      panic("duppage error: sys_page_map 1: %i\n", r);
-  }
-  if ((r = sys_page_map(0, addr, 0, addr, PTE_COW)) < 0) {
-    panic("duppage error: sys_page_map 2: %i\n", r);
-  }
-  } else {
-    if ((r = sys_page_map(0, addr, envid, addr, 0)) < 0) {
-      panic("duppage error: sys_page_map 0: %i\n", r);
-    }
-  }
-	// LAB 9 code end
+duppage(envid_t envid, uintptr_t pn) {
+  // LAB 9: Your code here.
+  pte_t ent = uvpt[pn];
+  envid_t id = sys_getenvid();
+  int res = sys_page_map(id, (void *) (pn * PGSIZE), envid, (void *) (pn * PGSIZE), (ent & PTE_SYSCALL) | PTE_COW );
 
-  return 0;
+  if (res < 0) return res;
+
+  return sys_page_map(id, (void *) (pn * PGSIZE), id, (void *) (pn * PGSIZE), (ent & PTE_SYSCALL) | PTE_COW);
 }
 
 //
@@ -114,9 +105,10 @@ duppage(envid_t envid, unsigned pn) {
 //
 envid_t
 fork(void) {
+  // LAB 9: Your code here.
+
   // Duplicating shadow addresses is insane. Make sure to skip shadow addresses in COW above.
 
-  // LAB 9 code
   envid_t e;
   int r;
 
@@ -129,38 +121,32 @@ fork(void) {
 		thisenv = &envs[ENVX(sys_getenvid())];
 		return 0;
 	} else {
-	  uint64_t i, j, k, l;
-    for (i = 0; i < PGSIZE / sizeof(pml4e_t); i++) {
-      for (j = 0; j < PGSIZE / sizeof(pdpe_t); j++) {
-		    for (k = 0; k < PGSIZE / sizeof(pde_t); k++) {
-          if (uvpd[i] & PTE_P) {
-            for (l = 0; k < PGSIZE / sizeof(pte_t); l++) {
-              void * addr = PGADDR(i, j, k, l, 0);
+	  uint64_t i;
+    for (i = 0; i < UTOP / PGSIZE; i++){
+      if ((uvpml4e[VPML4E(i * PGSIZE)] & PTE_P) && (uvpde[VPDPE(i * PGSIZE)] & PTE_P) && (uvpd[VPD(i * PGSIZE)] & PTE_P)){
+        void * addr = (void *) (i * PGSIZE);
 
 #ifdef SANITIZE_USER_SHADOW_BASE
-              uintptr_t p = (uintptr_t) addr;
-              if ((p >= SANITIZE_USER_SHADOW_BASE) && (p < SANITIZE_USER_SHADOW_BASE + SANITIZE_USER_SHADOW_SIZE)) {
-                  continue;
-              }
-              if ((p >= SANITIZE_USER_EXTRA_SHADOW_BASE) && (p < SANITIZE_USER_EXTRA_SHADOW_BASE + SANITIZE_USER_EXTRA_SHADOW_SIZE)) {
-                  continue;
-              }
-              if ((p >= SANITIZE_USER_STACK_SHADOW_BASE) && (p < SANITIZE_USER_STACK_SHADOW_BASE + SANITIZE_USER_STACK_SHADOW_SIZE)) {
-                  continue;
-              }
+    uintptr_t p = (uintptr_t) addr;
+    if ((p >= SANITIZE_USER_SHADOW_BASE) && (p < SANITIZE_USER_SHADOW_BASE + SANITIZE_USER_SHADOW_SIZE)) {
+        continue;
+    }
+    if ((p >= SANITIZE_USER_EXTRA_SHADOW_BASE) && (p < SANITIZE_USER_EXTRA_SHADOW_BASE + SANITIZE_USER_EXTRA_SHADOW_SIZE)) {
+        continue;
+    }
+    if ((p >= SANITIZE_USER_STACK_SHADOW_BASE) && (p < SANITIZE_USER_STACK_SHADOW_BASE + SANITIZE_USER_STACK_SHADOW_SIZE)) {
+        continue;
+    }
 #endif
 
-              if (((uintptr_t) addr < UTOP) && ((uintptr_t) addr != UXSTACKTOP - PGSIZE) && (uvpt[PGNUM(addr)] & PTE_P)) {
-                if ((r = duppage(e, PGNUM(addr))) < 0) {
-                  return r;
-                }
-              }
-            }
+        if (((uintptr_t) addr < UTOP) && ((uintptr_t) addr != UXSTACKTOP - PGSIZE) && (uvpt[PGNUM(addr)] & PTE_P)) {
+          if ((r = duppage(e, PGNUM(addr))) < 0) {
+            return r;
           }
         }
       }
     }
-    if ((r = sys_env_set_pgfault_upcall(e, thisenv->env_pgfault_upcall)) < 0) {
+    if ((r = sys_env_set_pgfault_upcall(e, _pgfault_upcall)) < 0) {
       panic("fork error: sys_env_set_pgfault_upcall: %i\n", r);
     }
     if ((r = sys_page_alloc(e, (void *) UXSTACKTOP - PGSIZE, PTE_W)) < 0) {
@@ -187,12 +173,10 @@ fork(void) {
     }
     return e;
   }
-  // LAB 9 code end
-
-  // return -1;
 }
 
 // Challenge!
+// what?
 int
 sfork(void) {
   panic("sfork not implemented");

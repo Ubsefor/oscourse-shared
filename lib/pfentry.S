@@ -40,7 +40,7 @@ _pgfault_upcall:
 	
 	// Now the C page fault handler has returned and you must return
 	// to the trap time state.
-	// Push trap-time %eip onto the trap-time stack.
+	// Push trap-time %rip onto the trap-time stack.
 	//
 	// Explanation:
 	//   We must prepare the trap-time stack for our eventual return to
@@ -50,10 +50,10 @@ _pgfault_upcall:
 	//   into a register, and all registers must have their trap-time
 	//   values after the return.
 	//   We can't call 'ret' from the exception stack either, since if we
-	//   did, %esp would have the wrong value.
-	//   So instead, we push the trap-time %eip onto the *trap-time* stack!
+	//   did, %rsp would have the wrong value.
+	//   So instead, we push the trap-time %rip onto the *trap-time* stack!
 	//   Below we'll switch to that stack and call 'ret', which will
-	//   restore %eip to its pre-fault value.
+	//   restore %rip to its pre-fault value.
 	//
 	//   In the case of a recursive fault on the exception stack,
 	//   note that the word we're pushing now will fit in the
@@ -63,49 +63,49 @@ _pgfault_upcall:
 	// registers are available for intermediate calculations.  You
 	// may find that you have to rearrange your code in non-obvious
 	// ways as registers become unavailable as scratch space.
-	
-	// LAB 9 code
-	addq $8, %rsp
-    //store trap-time rip
-    movq 0x20(%rsp), %rax
-    //store trap-time rsp
-	movq 0x28(%rsp), %rdx
-	//push trap-time eip on the trap-time stack
-	movq %rax, -0x4(%rdx)
-    //decrement trap-time rsp by 4
-    subq $4, %rdx
-    movq %rdx, 0x28(%rsp) //??????????????????????
-	// LAB 9 code end
+	//
+	// LAB 9: Your code here.
+
 
 	// Restore the trap-time registers.  After you do this, you
 	// can no longer modify any general-purpose registers.
-
-	// LAB 9 code
-	popq %rdi
+	// LAB 9: Your code here.
+	popq %r15
+	popq %r15
+	popq %r15
+	popq %r14
+	popq %r13
+	popq %r12
+	popq %r11
+	popq %r10
+	popq %r9
+	popq %r8
 	popq %rsi
+	popq %rdi
 	popq %rbp
-	popq %rbx
 	popq %rdx
 	popq %rcx
+
+	movq 32(%rsp), %rbx
+	movq 16(%rsp), %rax
+	subq $8, %rbx
+	movq %rax, (%rbx)
+	movq %rbx, 32(%rsp)
+
+	popq %rbx
 	popq %rax
-	// LAB 9 code end
 
 	// Restore rflags from the stack.  After you do this, you can
 	// no longer use arithmetic operations or anything else that
 	// modifies rflags.
-
-	// LAB 9 code
-	addq $8, %rsp
-	// LAB 9 code end
+	// LAB 9: Your code here.
+	pushq 8(%rsp)
+	popfq
 
 	// Switch back to the adjusted trap-time stack.
-
-	// LAB 9 code
-	popq %rsp
-	// LAB 9 code end
+	// LAB 9: Your code here.
+	movq 16(%rsp), %rsp
 
 	// Return to re-execute the instruction that faulted.
-
-	// LAB 9 code
+	// LAB 9: Your code here.
 	ret
-	// LAB 9 code end

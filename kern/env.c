@@ -212,6 +212,8 @@ env_setup_vm(struct Env *e) {
   pa2page(PTE_ADDR(kern_pml4e[1]))->pp_ref++;
 
   e->env_pml4e[2] = e->env_cr3 | PTE_P | PTE_U;
+  // LAB 8 code end
+
   return 0;
 }
 
@@ -327,10 +329,11 @@ region_alloc(struct Env *e, void *va, size_t len) {
 	struct PageInfo *pi;
 
 	while (va < end) {
-    pi = page_alloc(0);
+    pi = page_alloc(ALLOC_ZERO);
     page_insert(e->env_pml4e, pi, va, PTE_U | PTE_W);
     va += PGSIZE;
   }
+  // LAB 8 code end
 }
 
 #ifdef SANITIZE_USER_SHADOW_BASE
@@ -484,9 +487,9 @@ load_icode(struct Env *e, uint8_t *binary) {
       size_t memsz  = ph[i].p_memsz;
       size_t filesz = MIN(ph[i].p_filesz, memsz);
 
-      region_alloc(e, (void*) dst, memsz);
+      region_alloc(e, (void *)dst, memsz);
 
-      memcpy(dst, src, filesz);                // копируем в dst <- src  размера filesz
+      memcpy(dst, src, filesz);
       memset(dst + filesz, 0, memsz - filesz); // обнуление памяти по адресу dst + filesz, где количество нулей = memsz - filesz. Т.е. зануляем всю выделенную память сегмента кода, оставшуюяся после копирования src. Возможно, эта строка не нужна
     }
   }
@@ -630,8 +633,8 @@ env_destroy(struct Env *e) {
     
   // LAB 3 code
   e->env_status = ENV_DYING;
+  env_free(e);
   if (e == curenv) {
-    env_free(e);
     sched_yield();
   }
   // LAB 3 code end

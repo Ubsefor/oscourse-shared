@@ -11,6 +11,7 @@ rtc_timer_init(void) {
   // DELETED in LAB 5
   // pic_init();
   // DELETED in LAB 5 end
+  pic_init();
   rtc_init();
 }
 

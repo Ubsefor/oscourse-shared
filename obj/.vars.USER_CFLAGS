@@ -1,0 +1,1 @@
+  -Ddebug=0 -fno-builtin -I. -MD -O1 -ffreestanding -fno-omit-frame-pointer -mno-red-zone -Wall -Wformat=2 -Wno-unused-function -Werror -g -gpubnames -fno-stack-protector -DUPAGES_SIZE=41943040  -DFBUFF_SIZE=0xFD2000  -Wno-unused-but-set-variable -DLAB=9 -mcmodel=large -m64 -DJOS_USER

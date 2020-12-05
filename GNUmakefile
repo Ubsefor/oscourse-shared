@@ -62,7 +62,7 @@ OBJCOPY	:= llvm/gnu-objcopy
 OBJDUMP	:= llvm-objdump
 NM	:= llvm-nm
 
-EXTRA_CFLAGS	:= $(EXTRA_CFLAGS) -Wno-self-assign -Wno-format-nonliteral -Wno-address-of-packed-member
+EXTRA_CFLAGS	:= $(EXTRA_CFLAGS) -Wno-self-assign -Wno-format-nonliteral -Wno-address-of-packed-member -Wno-frame-address
 
 GCC_LIB := $(shell $(CC) $(CFLAGS) -print-resource-dir)/lib/jetos/libclang_rt.builtins-x86_64.a
 
@@ -151,6 +151,7 @@ CFLAGS += -Wall -Wformat=2 -Wno-unused-function -Werror -g -gpubnames
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 CFLAGS += -DUPAGES_SIZE=$(UPAGES_SIZE)  -DFBUFF_SIZE=$(FBUFF_SIZE)
 CFLAGS += $(EXTRA_CFLAGS)
+CFLAGS += -mno-sse -mno-sse2 -mno-mmx
 
 
 KERN_SAN_CFLAGS :=
@@ -253,10 +254,10 @@ CFLAGS += -DGRADE3_PFX2=$(GRADE3_PFX2)
 endif
 
 # Common linker flags
-LDFLAGS := -m elf_x86_64 -z max-page-size=0x1000 --print-gc-sections
+LDFLAGS := -m elf_x86_64 -z max-page-size=0x1000 --print-gc-sections --warn-common
 
 # Linker flags for JOS programs
-ULDFLAGS := -T user/user.ld
+ULDFLAGS := -T user/user.ld --warn-common
 
 # Lists that the */Makefrag makefile fragments will add to
 OBJDIRS :=
@@ -304,6 +305,7 @@ ifeq ($(CONFIG_KSPACE),y)
 include prog/Makefrag
 else
 include user/Makefrag
+include fs/Makefrag
 endif
 
 QEMUOPTS = -hda fat:rw:$(JOS_ESP) -serial mon:stdio -gdb tcp::$(GDBPORT)
@@ -311,6 +313,12 @@ QEMUOPTS += -m 8192M
 
 QEMUOPTS += $(shell if $(QEMU) -display none -help | grep -q '^-D '; then echo '-D qemu.log'; fi)
 IMAGES = $(OVMF_FIRMWARE) $(JOS_LOADER) $(OBJDIR)/kern/kernel $(JOS_ESP)/EFI/BOOT/kernel $(JOS_ESP)/EFI/BOOT/$(JOS_BOOTER)
+ifeq ($(CONFIG_SNAPSHOT),y)
+	QEMUOPTS += -drive file=$(OBJDIR)/fs/fs.img,if=ide,snapshot=on
+else
+	QEMUOPTS += -drive file=$(OBJDIR)/fs/fs.img,if=ide
+endif
+IMAGES += $(OBJDIR)/fs/fs.img
 QEMUOPTS += -bios $(OVMF_FIRMWARE)
 # QEMUOPTS += -debugcon file:$(UEFIDIR)/debug.log -global isa-debugcon.iobase=0x402
 

@@ -394,7 +394,7 @@ mem_init(void) {
 void
 kasan_mem_init(void) {
   // Unpoison memory in which kernel was loaded
-  platform_asan_unpoison((void *)KERNBASE, (uint32_t)(boot_alloc(0) - KERNBASE));
+  platform_asan_unpoison((void *)KERNBASE, (uint64_t)(boot_alloc(0) - KERNBASE));
 
   // Go through all pages and unpoison pages which have at least one ref.
   for (int pgidx = 0; pgidx < npages; pgidx++) {

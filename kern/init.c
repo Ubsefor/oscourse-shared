@@ -178,15 +178,20 @@ i386_init(void) {
   ENV_CREATE_KERNEL_TYPE(prog_test5);
   ENV_CREATE_KERNEL_TYPE(prog_test6);
 #else
+  ENV_CREATE(fs_fs, ENV_TYPE_FS);
+
 #if defined(TEST)
   // Don't touch -- used by grading script!
   ENV_CREATE(TEST, ENV_TYPE_USER);
 #else
   // Touch all you want.
-  // ENV_CREATE(user_hello, ENV_TYPE_USER);
-  // ENV_CREATE(user_dumbfork, ENV_TYPE_USER);
+  ENV_CREATE(user_icode, ENV_TYPE_USER);
 #endif // TEST*
 #endif
+
+  // Should not be necessary - drains keyboard because interrupt has given up.
+  kbd_intr();
+
   // Schedule and run the first user environment!
   sched_yield();
 }

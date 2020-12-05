@@ -71,6 +71,8 @@ platform_asan_init() {
                  asan_internal_shadow_extra_end - asan_internal_shadow_extra_start);
   __nosan_memset((void *)SANITIZE_USER_STACK_SHADOW_BASE, 0,
                  SANITIZE_USER_STACK_SHADOW_SIZE);
+  __nosan_memset((void *)SANITIZE_USER_FS_SHADOW_BASE, 0,
+                 SANITIZE_USER_FS_SHADOW_SIZE);
   __nosan_memset((void *)SANITIZE_USER_VPT_SHADOW_BASE, 0,
                  SANITIZE_USER_VPT_SHADOW_SIZE);
 }

@@ -514,6 +514,8 @@ load_icode(struct Env *e, uint8_t *binary) {
   region_alloc(e, (void *)SANITIZE_USER_STACK_SHADOW_BASE, SANITIZE_USER_STACK_SHADOW_SIZE);
   cprintf("Allocating shadow uextra %p:%p\n", (void *)(SANITIZE_USER_EXTRA_SHADOW_BASE), (void *)(SANITIZE_USER_EXTRA_SHADOW_BASE + SANITIZE_USER_EXTRA_SHADOW_SIZE));
   region_alloc(e, (void *)SANITIZE_USER_EXTRA_SHADOW_BASE, SANITIZE_USER_EXTRA_SHADOW_SIZE);
+  cprintf("Allocating shadow fs %p:%p\n", (void *)(SANITIZE_USER_FS_SHADOW_BASE), (void *)(SANITIZE_USER_FS_SHADOW_BASE + SANITIZE_USER_FS_SHADOW_SIZE));
+  region_alloc(e, (void *)SANITIZE_USER_FS_SHADOW_BASE, SANITIZE_USER_FS_SHADOW_SIZE);
   cprintf("Allocating shadow vpt %p:%p\n", (void *)(SANITIZE_USER_VPT_SHADOW_BASE), (void *)(SANITIZE_USER_VPT_SHADOW_BASE + SANITIZE_USER_VPT_SHADOW_SIZE));
   uvpt_shadow_map(e);
 #endif
@@ -539,6 +541,12 @@ env_create(uint8_t *binary, enum EnvType type) {
 
   load_icode(newenv, binary); // load instruction code
   // LAB 3 code end
+
+  // LAB 10 code
+  if (type == ENV_TYPE_FS) {
+	    newenv->env_tf.tf_rflags |= FL_IOPL_3;
+	}
+  // LAB 10 code end
     
 }
 

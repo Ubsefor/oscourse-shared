@@ -20,6 +20,15 @@ enum {
   E_IPC_NOT_RECV = 10, // Attempt to send to env that is not recving
   E_EOF          = 11, // Unexpected end of file
 
+  // File system error codes -- only seen in user-level
+  E_NO_DISK     = 12, // No free space left on disk
+  E_MAX_OPEN    = 13, // Too many files are open
+  E_NOT_FOUND   = 14, // File or block not found
+  E_BAD_PATH    = 15, // Bad path
+  E_FILE_EXISTS = 16, // File already exists
+  E_NOT_EXEC    = 17, // File not a valid executable
+  E_NOT_SUPP    = 18, // Operation not supported
+
   MAXERROR
 };
 

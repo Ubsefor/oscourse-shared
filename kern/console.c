@@ -7,7 +7,9 @@
 #include <inc/assert.h>
 
 #include <kern/console.h>
+#include <kern/picirq.h>
 #include <inc/uefi.h>
+#include <kern/pmap.h>
 
 static bool graphics_exists = false;
 static uint32_t uefi_vres;
@@ -246,6 +248,10 @@ serial_init(void) {
   serial_exists = (inb(COM1 + COM_LSR) != 0xFF);
   (void)inb(COM1 + COM_IIR);
   (void)inb(COM1 + COM_RX);
+
+  // Enable serial interrupts
+  if (serial_exists)
+    irq_setmask_8259A(irq_mask_8259A & ~(1 << 4));
 }
 
 /***** Parallel port output code *****/
@@ -482,6 +488,9 @@ kbd_intr(void) {
 
 static void
 kbd_init(void) {
+  // Drain the kbd buffer so that Bochs generates interrupts.
+  kbd_intr();
+  irq_setmask_8259A(irq_mask_8259A & ~(1 << 1));
 }
 
 /***** General device-independent console code *****/

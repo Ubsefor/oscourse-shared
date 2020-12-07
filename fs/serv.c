@@ -98,8 +98,6 @@ serve_open(envid_t envid, struct Fsreq_open *req,
   int r;
   struct OpenFile *o;
 
-  cprintf("!!!!!!!!!!!!!!!!!!!!!!\n");
-
   if (debug)
     cprintf("serve_open %08x %s 0x%x\n", envid, req->req_path, req->req_omode);
 
@@ -202,7 +200,7 @@ serve_read(envid_t envid, union Fsipc *ipc) {
     cprintf("serve_read %08x %08x %08x\n", envid, req->req_fileid, (uint32_t)req->req_n);
 
   // LAB 10 code
-	//struct Fsret_read *ret = &ipc->readRet;
+	struct Fsret_read *ret = &ipc->readRet;
   struct OpenFile *o;
   int r;
 
@@ -210,7 +208,7 @@ serve_read(envid_t envid, union Fsipc *ipc) {
 	  return r;
 	}
 
-	int count = 5; //file_read(o->o_file, ret->ret_buf, req->req_n, o->o_fd->fd_offset);
+	int count = file_read(o->o_file, ret->ret_buf, req->req_n, o->o_fd->fd_offset);
   if (count > 0) {
     o->o_fd->fd_offset += count;
   } 

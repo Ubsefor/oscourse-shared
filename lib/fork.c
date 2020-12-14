@@ -43,7 +43,7 @@ pgfault(struct UTrapframe *utf) {
   //   Make sure you DO NOT use sanitized memcpy/memset routines when using UASAN.
 
   // LAB 9 code
-  if ((r = sys_page_alloc(0, (void *) PFTEMP, PTE_W)) < 0) {
+  if ((r = sys_page_alloc(0, (void *) PFTEMP, PTE_W | PTE_U | PTE_P)) < 0) {
 		panic("pgfault error: sys_page_alloc: %i\n", r);
   }
 
@@ -53,7 +53,7 @@ pgfault(struct UTrapframe *utf) {
 	memmove((void *) PFTEMP, ROUNDDOWN(addr, PGSIZE), PGSIZE);
 #endif
 
-	if ((r = sys_page_map(0, (void *) PFTEMP, 0, ROUNDDOWN(addr, PGSIZE), PTE_W)) < 0) {
+	if ((r = sys_page_map(0, (void *) PFTEMP, 0, ROUNDDOWN(addr, PGSIZE), PTE_W | PTE_U | PTE_P)) < 0) {
 	  panic("pgfault error: sys_page_map: %i\n", r);
 	}
 
@@ -82,7 +82,13 @@ duppage(envid_t envid, uintptr_t pn) {
   int r;
   envid_t id = sys_getenvid();
 
-  if (ent & (PTE_W | PTE_COW)) {
+  // LAB 11 code
+  if (uvpt[pn] & PTE_SHARE) {
+    if ((r = sys_page_map(id, (void *)(pn * PGSIZE), envid, (void *)(pn * PGSIZE), ent)) < 0) {
+      panic("duppage error: sys_page_map PTE_SHARE: %i\n", r);
+    }
+  // LAB 11 code end
+  } else if (ent & (PTE_W | PTE_COW)) {
     ent = (ent | PTE_COW) & ~PTE_W;
     r = sys_page_map(id, (void *)(pn * PGSIZE), envid, (void *)(pn * PGSIZE), ent);
 
@@ -138,7 +144,6 @@ fork(void) {
     for (i = 0; i < UTOP / PGSIZE; i++) {
       if ((uvpml4e[VPML4E(i * PGSIZE)] & PTE_P) && (uvpde[VPDPE(i * PGSIZE)] & PTE_P) && (uvpd[VPD(i * PGSIZE)] & PTE_P)) {
         void * addr = (void *)(i * PGSIZE);
-                  
 
 #ifdef SANITIZE_USER_SHADOW_BASE
         uintptr_t p = (uintptr_t) addr;
@@ -157,6 +162,12 @@ fork(void) {
 #endif
 
         if (((uintptr_t) addr < UTOP) && ((uintptr_t) addr != UXSTACKTOP - PGSIZE) && (uvpt[PGNUM(addr)] & PTE_P)) {
+          // cprintf("FORK addr %lx\n", (uint64_t)addr);
+          // cprintf("PTE_W %ld\n", uvpt[PGNUM(addr)] & PTE_W);
+          // cprintf("PTE_U %ld\n", uvpt[PGNUM(addr)] & PTE_U);
+          // cprintf("PTE_P %ld\n", uvpt[PGNUM(addr)] & PTE_P);
+          // cprintf("PTE_COW %ld\n", uvpt[PGNUM(addr)] & PTE_COW);
+          // cprintf("PTE_SHARE %ld\n", uvpt[PGNUM(addr)] & PTE_SHARE);
           if ((r = duppage(e, PGNUM(addr))) < 0) {
             return r;
           }

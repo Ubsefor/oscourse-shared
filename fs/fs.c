@@ -175,7 +175,7 @@ file_block_walk(struct File *f, uint32_t filebno, uint32_t **ppdiskbno, bool all
 // Hint: Use file_block_walk and alloc_block.
 int
 file_get_block(struct File *f, uint32_t filebno, char **blk) {
-  // LAB 10: Your code here.
+  // LAB 10 code
   int r, newb;
   uint32_t *pdiskbno;
   if ((r = file_block_walk(f, filebno, &pdiskbno, 1)) < 0) {

@@ -133,6 +133,27 @@ sys_env_set_status(envid_t envid, int status) {
   return -1;
 }
 
+static int
+sys_env_set_trapframe(envid_t envid, struct Trapframe *tf) {
+  // LAB 11 code
+  struct Env *env;
+  int res = envid2env(envid, &env, 1);
+ 
+  if (res < 0) return res;
+ 
+  user_mem_assert(curenv, tf, sizeof(*tf), 0);
+ 
+  env->env_tf = *tf;
+  env->env_tf.tf_cs = GD_UT | 3;
+  env->env_tf.tf_ds = GD_UD | 3;
+  env->env_tf.tf_es = GD_UD | 3;
+  env->env_tf.tf_ss = GD_UD | 3;
+  env->env_tf.tf_rflags &= 0xFFF;
+  env->env_tf.tf_rflags |= FL_IF;
+  return 0;
+	// LAB 11 code end
+}
+
 // Set the page fault upcall for 'envid' by modifying the corresponding struct
 // Env's 'env_pgfault_upcall' field.  When 'envid' causes a page fault, the
 // kernel will push a fault record onto the exception stack, then branch to
@@ -435,6 +456,10 @@ syscall(uintptr_t syscallno, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t
   } else if (syscallno == SYS_ipc_recv) {
     return sys_ipc_recv((void *) a1);
   // LAB 9 code end
+  // LAB 11 code
+  } else if (syscallno == SYS_env_set_trapframe) {
+    return sys_env_set_trapframe((envid_t) a1, (struct Trapframe *) a2);
+  // LAB 11 code end
   } else {
     return -E_INVAL;
   }

@@ -212,6 +212,7 @@ serve_read(envid_t envid, union Fsipc *ipc) {
     o->o_fd->fd_offset += count;
   }
   return count;
+  // LAB 10 code end
 
   //return -1;
 }
@@ -225,7 +226,7 @@ serve_write(envid_t envid, struct Fsreq_write *req) {
   if (debug)
     cprintf("serve_write %08x %08x %08x\n", envid, req->req_fileid, (uint32_t)req->req_n);
 
-  // LAB 10: Your code here.
+  // LAB 10 code
   struct OpenFile *o;
   int r;
 
@@ -237,6 +238,7 @@ serve_write(envid_t envid, struct Fsreq_write *req) {
     o->o_fd->fd_offset += count;
   }
   return count;
+  // LAB 10 code end
 
   //return -1;
 }

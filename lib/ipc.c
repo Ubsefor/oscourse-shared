@@ -21,7 +21,7 @@
 //   a perfectly valid place to map a page.)
 int32_t
 ipc_recv(envid_t *from_env_store, void *pg, int *perm_store) {
-  // LAB 9: Your code here.
+  // LAB 9 code
   int r;
 
   if ((r = sys_ipc_recv(pg)) < 0) {
@@ -32,19 +32,21 @@ ipc_recv(envid_t *from_env_store, void *pg, int *perm_store) {
       *perm_store = 0;
     }
     return r;
-  }
-
-  // else
-  if (from_env_store) {
-    *from_env_store = thisenv->env_ipc_from;
-  }
-  if (perm_store) {
-    *perm_store = thisenv->env_ipc_perm;
-  }
+  } else {
+    if (from_env_store) {
+      *from_env_store = thisenv->env_ipc_from;
+    }
+    if (perm_store) {
+      *perm_store = thisenv->env_ipc_perm;
+    }
 #ifdef SANITIZE_USER_SHADOW_BASE
-  platform_asan_unpoison(pg, PGSIZE);
+    platform_asan_unpoison(pg, PGSIZE);
 #endif
-  return thisenv->env_ipc_value;
+    return thisenv->env_ipc_value;
+  }
+  // LAB 9 code end
+
+  // return -1;
 }
 
 // Send 'val' (and 'pg' with 'perm', if 'pg' is nonnull) to 'toenv'.
@@ -57,7 +59,7 @@ ipc_recv(envid_t *from_env_store, void *pg, int *perm_store) {
 //   as meaning "no page".  (Zero is not the right value.)
 void
 ipc_send(envid_t to_env, uint32_t val, void *pg, int perm) {
-  // LAB 9: Your code here.
+  // LAB 9 code
   int r;
 
   if (pg == NULL) {
@@ -69,9 +71,8 @@ ipc_send(envid_t to_env, uint32_t val, void *pg, int perm) {
     }
     sys_yield();
   }
-
-  // last one
   sys_yield();
+  // LAB 9 code end
 }
 
 // Find the first environment of the given type.  We'll use this to

@@ -3,6 +3,7 @@
 
 #ifndef __ASSEMBLER__
 #include <inc/types.h>
+#include <inc/vsyscall.h>
 #include <inc/mmu.h>
 #endif /* not __ASSEMBLER__ */
 
@@ -141,12 +142,19 @@
 // Read-only copies of the global env structures
 #define UENVS (UPAGES - PTSIZE)
 
+// LAB 12 code
+#define UVSYS (UENVS - PTSIZE)
+// LAB 12 code end
+
 /*
  * Top of user VM. User can manipulate VA from UTOP-1 and down!
  */
 
 // Top of user-accessible VM
+// #define UTOP 0x8000000000
+// LAB 12 code
 #define UTOP 0x8000000000
+// LAB 12 code end
 // Top of one-page user exception stack
 #define UXSTACKTOP UTOP
 // Size of exception stack (must be one page for now)
@@ -204,7 +212,7 @@ typedef uint64_t pte_t;
  * One result of treating the page directory as a page table is that all PTEs
  * can be accessed through a "virtual page table" at virtual address UVPT (to
  * which uvpt is set in entry.S).  The PTE for page number N is stored in
- * uvpt[N].  (It's worth drawing a diagram of this!)
+ * [N].  (It's worth drawing a diagram of this!)
  *
  * A second consequence is that the contents of the current page directory
  * will always be available at virtual address (UVPT + (UVPT >> PGSHIFT)), to

@@ -108,7 +108,8 @@ devfile_read(struct Fd *fd, void *buf, size_t n) {
   // filling fsipcbuf.read with the request arguments.  The
   // bytes read will be written back to fsipcbuf by the file
   // system server.
-  // LAB 10: Your code here
+
+  // LAB 10 code
   int r;
   fsipcbuf.read.req_fileid = fd->fd_file.id;
   fsipcbuf.read.req_n      = n;
@@ -119,8 +120,9 @@ devfile_read(struct Fd *fd, void *buf, size_t n) {
   assert(r <= PGSIZE);
   memmove(buf, &fsipcbuf, r);
   return r;
+  // LAB 10 code end
 
-  //return -1;
+  // return -1;
 }
 
 // Write at most 'n' bytes from 'buf' to 'fd' at the current seek position.
@@ -134,11 +136,15 @@ devfile_write(struct Fd *fd, const void *buf, size_t n) {
   // careful: fsipcbuf.write.req_buf is only so large, but
   // remember that write is always allowed to write *fewer*
   // bytes than requested.
-  // LAB 10: Your code here
+
+  // LAB 10 code
   fsipcbuf.write.req_fileid = fd->fd_file.id;
   fsipcbuf.write.req_n      = n;
   memmove(fsipcbuf.write.req_buf, buf, n);
   return fsipc(FSREQ_WRITE, NULL);
+  // LAB 10 code end
+
+  //return -1;
 }
 
 static int

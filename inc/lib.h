@@ -16,6 +16,7 @@
 #include <inc/env.h>
 #include <inc/memlayout.h>
 #include <inc/syscall.h>
+#include <inc/vsyscall.h>
 #include <inc/trap.h>
 #include <inc/fs.h>
 #include <inc/fd.h>
@@ -36,6 +37,7 @@ void umain(int argc, char **argv);
 
 // libmain.c or entry.S
 extern const char *binaryname;
+extern const volatile int vsys[];
 extern const volatile struct Env *thisenv;
 extern const volatile struct Env envs[NENV];
 extern const volatile struct PageInfo pages[];
@@ -65,6 +67,9 @@ int sys_page_map(envid_t src_env, void *src_pg,
 int sys_page_unmap(envid_t env, void *pg);
 int sys_ipc_try_send(envid_t to_env, uint64_t value, void *pg, int perm);
 int sys_ipc_recv(void *rcv_pg);
+int sys_gettime(void);
+
+int vsys_gettime(void);
 
 // This must be inlined.  Exercise for reader: why?
 static __inline envid_t __attribute__((always_inline))

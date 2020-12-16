@@ -29,9 +29,10 @@ pgfault(struct UTrapframe *utf) {
   uint64_t err = utf->utf_err;
   int r;
 
-  if (!((err & FEC_WR) && (uvpt[PGNUM(addr)] & (PTE_COW)))) {
+  if (!((err & FEC_WR) && (uvpt[PGNUM(addr)] & PTE_COW))) {
     panic("Not a WR or not a COW page! va: %lx err: %lx\n", (uint64_t)addr, err);
   }
+  // LAB 9 code end
 
   // Allocate a new page, map it at a temporary location (PFTEMP),
   // copy the data from the old page to the new page, then move the new
@@ -42,7 +43,7 @@ pgfault(struct UTrapframe *utf) {
   //   Make sure you DO NOT use sanitized memcpy/memset routines when using UASAN.
 
   // LAB 9 code
-  if ((r = sys_page_alloc(0, (void *)PFTEMP, PTE_W)) < 0) {
+  if ((r = sys_page_alloc(0, (void *)PFTEMP, PTE_W | PTE_U | PTE_P)) < 0) {
     panic("pgfault error: sys_page_alloc: %i\n", r);
   }
 
@@ -52,13 +53,14 @@ pgfault(struct UTrapframe *utf) {
   memmove((void *)PFTEMP, ROUNDDOWN(addr, PGSIZE), PGSIZE);
 #endif
 
-  if ((r = sys_page_map(0, (void *)PFTEMP, 0, ROUNDDOWN(addr, PGSIZE), PTE_W)) < 0) {
+  if ((r = sys_page_map(0, (void *)PFTEMP, 0, ROUNDDOWN(addr, PGSIZE), PTE_W | PTE_U | PTE_P)) < 0) {
     panic("pgfault error: sys_page_map: %i\n", r);
   }
 
   if ((r = sys_page_unmap(0, (void *)PFTEMP)) < 0) {
     panic("pgfault error: sys_page_unmap: %i\n", r);
   }
+  // LAB 9 code end
 }
 
 //
@@ -80,11 +82,12 @@ duppage(envid_t envid, uintptr_t pn) {
   int r;
   envid_t id = sys_getenvid();
 
+  // LAB 11 code
   if (uvpt[pn] & PTE_SHARE) {
-    if ((r = sys_page_map(0, (void *)(pn * PGSIZE), envid, (void *)(pn * PGSIZE), ent)) < 0) {
+    if ((r = sys_page_map(id, (void *)(pn * PGSIZE), envid, (void *)(pn * PGSIZE), ent)) < 0) {
       panic("duppage error: sys_page_map PTE_SHARE: %i\n", r);
     }
-
+    // LAB 11 code end
   } else if (ent & (PTE_W | PTE_COW)) {
     ent = (ent | PTE_COW) & ~PTE_W;
     r   = sys_page_map(id, (void *)(pn * PGSIZE), envid, (void *)(pn * PGSIZE), ent);
@@ -96,7 +99,11 @@ duppage(envid_t envid, uintptr_t pn) {
   } else {
     r = sys_page_map(id, (void *)(pn * PGSIZE), envid, (void *)(pn * PGSIZE), ent);
   }
+
   return r;
+  // LAB 9 code end
+
+  // return 0;
 }
 
 //
@@ -155,6 +162,12 @@ fork(void) {
 #endif
 
         if (((uintptr_t)addr < UTOP) && ((uintptr_t)addr != UXSTACKTOP - PGSIZE) && (uvpt[PGNUM(addr)] & PTE_P)) {
+          // cprintf("FORK addr %lx\n", (uint64_t)addr);
+          // cprintf("PTE_W %ld\n", uvpt[PGNUM(addr)] & PTE_W);
+          // cprintf("PTE_U %ld\n", uvpt[PGNUM(addr)] & PTE_U);
+          // cprintf("PTE_P %ld\n", uvpt[PGNUM(addr)] & PTE_P);
+          // cprintf("PTE_COW %ld\n", uvpt[PGNUM(addr)] & PTE_COW);
+          // cprintf("PTE_SHARE %ld\n", uvpt[PGNUM(addr)] & PTE_SHARE);
           if ((r = duppage(e, PGNUM(addr))) < 0) {
             return r;
           }
@@ -188,6 +201,9 @@ fork(void) {
     }
     return e;
   }
+  // LAB 9 code end
+
+  // return -1;
 }
 
 // Challenge!

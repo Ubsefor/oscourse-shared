@@ -324,7 +324,7 @@ map_segment(envid_t child, uintptr_t va, size_t memsz,
 // Copy the mappings for shared pages into the child address space.
 static int
 copy_shared_pages(envid_t child) {
-
+  // LAB 11 code
   int err = 0;
   for (size_t i = 0; i < UTOP; i += PGSIZE) {
     if (!(uvpml4e[VPML4E(i)] & PTE_P) || !(uvpde[VPDPE(i)] & PTE_P) || !(uvpd[VPD(i)] & PTE_P)) {
@@ -337,4 +337,5 @@ copy_shared_pages(envid_t child) {
     }
   }
   return err;
+  // LAB 11 code end
 }

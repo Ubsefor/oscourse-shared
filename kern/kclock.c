@@ -1,6 +1,7 @@
 /* See COPYRIGHT for copyright information. */
 
 #include <inc/x86.h>
+#include <inc/time.h>
 #include <kern/kclock.h>
 #include <kern/timer.h>
 #include <kern/trap.h>
@@ -8,6 +9,9 @@
 
 static void
 rtc_timer_init(void) {
+  // DELETED in LAB 5
+  // pic_init();
+  // DELETED in LAB 5 end
   pic_init();
   rtc_init();
 }
@@ -29,6 +33,63 @@ struct Timer timer_rtc = {
     .enable_interrupts = rtc_timer_pic_interrupt,
     .handle_interrupts = rtc_timer_pic_handle,
 };
+
+static int
+get_time(void) {
+  struct tm time;
+
+  uint8_t s, m, h, d, M, y, Y, state;
+  s = mc146818_read(RTC_SEC);
+  m = mc146818_read(RTC_MIN);
+  h = mc146818_read(RTC_HOUR);
+  d = mc146818_read(RTC_DAY);
+  M = mc146818_read(RTC_MON);
+  y = mc146818_read(RTC_YEAR);
+  Y = mc146818_read(RTC_YEAR_HIGH);
+
+  state = mc146818_read(RTC_BREG);
+  if (state & RTC_12H) {
+    /* Fixup 12 hour mode */
+    h = (h & 0x7F) + 12 * !!(h & 0x80);
+  }
+
+  if (!(state & RTC_BINARY)) {
+    /* Fixup binary mode */
+    s = BCD2BIN(s);
+    m = BCD2BIN(m);
+    h = BCD2BIN(h);
+    d = BCD2BIN(d);
+    M = BCD2BIN(M);
+    y = BCD2BIN(y);
+    Y = BCD2BIN(Y);
+  }
+
+  time.tm_sec  = s;
+  time.tm_min  = m;
+  time.tm_hour = h;
+  time.tm_mday = d;
+  time.tm_mon  = M - 1;
+  time.tm_year = y + Y * 100 - 1900;
+
+  return timestamp(&time);
+}
+
+int
+gettime(void) {
+  nmi_disable();
+  // LAB 12 code
+  int t;
+  while (mc146818_read(RTC_AREG) & RTC_UPDATE_IN_PROGRESS)
+    ;
+  if ((t = get_time()) != get_time()) {
+    t = get_time();
+  }
+  // LAB 12 code end
+  nmi_enable();
+  // LAB 12 code
+  return t;
+  // LAB 12 code end
+}
 
 void
 rtc_init(void) {

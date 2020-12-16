@@ -49,17 +49,16 @@ again:
         // then check whether 'fd' is 0.
         // If not, dup 'fd' onto file descriptor 0,
         // then close the original 'fd'.
+        // LAB 11 Your code here.
 
-        // LAB 11 code
         if ((fd = open(t, O_RDONLY)) < 0) {
           cprintf("open %s for read: %i", t, fd);
           exit();
         }
         if (fd != 0) {
-				  dup(fd, 0);
-				  close(fd);
-			  }
-        // LAB 11 code end
+          dup(fd, 0);
+          close(fd);
+        }
         break;
 
       case '>': // Output redirection

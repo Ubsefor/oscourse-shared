@@ -131,19 +131,18 @@ envid2env(envid_t envid, struct Env **env_store, bool checkperm) {
 void
 env_init(void) {
   // Set up envs array
-    
+
   // LAB 3 code
   env_free_list = NULL; // NULLing new env_list
   for (int i = NENV - 1; i >= 0; i--) {
     // initialization in for loop every new environment till max env met
     envs[i].env_status = ENV_FREE;
-    envs[i].env_link = env_free_list;
-    envs[i].env_id   = 0;
-    env_free_list    = &envs[i];
+    envs[i].env_link   = env_free_list;
+    envs[i].env_id     = 0;
+    env_free_list      = &envs[i];
   }
   env_init_percpu();
   // LAB 3 code end
-    
 }
 
 // Load GDT and segment descriptors.
@@ -205,15 +204,13 @@ env_setup_vm(struct Env *e) {
   //    - The functions in kern/pmap.h are handy.
 
   // LAB 8 code
-	e->env_pml4e = page2kva(p);
-  e->env_cr3 = page2pa(p);
+  e->env_pml4e = page2kva(p);
+  e->env_cr3   = page2pa(p);
 
   e->env_pml4e[1] = kern_pml4e[1];
   pa2page(PTE_ADDR(kern_pml4e[1]))->pp_ref++;
 
   e->env_pml4e[2] = e->env_cr3 | PTE_P | PTE_U;
-  // LAB 8 code end
-
   return 0;
 }
 
@@ -277,9 +274,9 @@ env_alloc(struct Env **newenv_store, envid_t parent_id) {
 
   // LAB 3 code
   static int STACK_TOP = 0x2000000;
-  e->env_tf.tf_rsp = STACK_TOP - (e - envs) * 2 * PGSIZE;
+  e->env_tf.tf_rsp     = STACK_TOP - (e - envs) * 2 * PGSIZE;
   // LAB 3 code end
-    
+
 #else
   e->env_tf.tf_ds  = GD_UD | 3;
   e->env_tf.tf_es  = GD_UD | 3;
@@ -325,15 +322,14 @@ region_alloc(struct Env *e, void *va, size_t len) {
 
   // LAB 8 code
   void *end = ROUNDUP(va + len, PGSIZE);
-  va = ROUNDDOWN(va, PGSIZE);
-	struct PageInfo *pi;
+  va        = ROUNDDOWN(va, PGSIZE);
+  struct PageInfo *pi;
 
-	while (va < end) {
+  while (va < end) {
     pi = page_alloc(ALLOC_ZERO);
     page_insert(e->env_pml4e, pi, va, PTE_U | PTE_W);
     va += PGSIZE;
   }
-  // LAB 8 code end
 }
 
 #ifdef SANITIZE_USER_SHADOW_BASE
@@ -376,9 +372,9 @@ bind_functions(struct Env *e, uint8_t *binary) {
   // find_function from kdebug.c should be used
   // LAB 3 code
 
-  struct Elf *elf = (struct Elf *)binary;
+  struct Elf *elf    = (struct Elf *)binary;
   struct Secthdr *sh = (struct Secthdr *)(binary + elf->e_shoff);
-  const char *shstr = (char *)binary + sh[elf->e_shstrndx].sh_offset;
+  const char *shstr  = (char *)binary + sh[elf->e_shstrndx].sh_offset;
 
   // Find string table
   size_t strtab = -1UL;
@@ -402,7 +398,7 @@ bind_functions(struct Env *e, uint8_t *binary) {
             ELF64_ST_TYPE(syms[j].st_info) == STT_OBJECT &&
             syms[j].st_size == sizeof(void *)) {
           const char *name = strings + syms[j].st_name;
-          uintptr_t addr = find_function(name);
+          uintptr_t addr   = find_function(name);
 
           if (addr) {
             memcpy((void *)syms[j].st_value, &addr, sizeof(void *));
@@ -489,7 +485,7 @@ load_icode(struct Env *e, uint8_t *binary) {
 
       region_alloc(e, (void *)dst, memsz);
 
-      memcpy(dst, src, filesz);
+      memcpy(dst, src, filesz);                // копируем в dst <- src  размера filesz
       memset(dst + filesz, 0, memsz - filesz); // обнуление памяти по адресу dst + filesz, где количество нулей = memsz - filesz. Т.е. зануляем всю выделенную память сегмента кода, оставшуюяся после копирования src. Возможно, эта строка не нужна
     }
   }
@@ -502,7 +498,7 @@ load_icode(struct Env *e, uint8_t *binary) {
   // LAB 3 code end
 
   // LAB 8 code
-  region_alloc(e, (void *) (USTACKTOP - USTACKSIZE), USTACKSIZE);
+  region_alloc(e, (void *)(USTACKTOP - USTACKSIZE), USTACKSIZE);
   // LAB 8 code end
 
   // LAB 8: One more hint for implementing sanitizers.
@@ -530,24 +526,21 @@ load_icode(struct Env *e, uint8_t *binary) {
 //
 void
 env_create(uint8_t *binary, enum EnvType type) {
-    
+
   // LAB 3 code
   struct Env *newenv;
   if (env_alloc(&newenv, 0) < 0) {
-    panic("Can't allocate new environment");  // попытка выделить среду – если нет – вылет по панике ядра
+    panic("Can't allocate new environment"); // попытка выделить среду – если нет – вылет по панике ядра
   }
-      
+
   newenv->env_type = type;
 
   load_icode(newenv, binary); // load instruction code
-  // LAB 3 code end
 
-  // LAB 10 code
+  // LAB 10 Your code here.
   if (type == ENV_TYPE_FS) {
-	    newenv->env_tf.tf_rflags |= FL_IOPL_3;
-	}
-  // LAB 10 code end
-    
+    newenv->env_tf.tf_rflags |= FL_IOPL_3;
+  }
 }
 
 //
@@ -638,7 +631,7 @@ env_destroy(struct Env *e) {
   // If e is currently running on other CPUs, we change its state to
   // ENV_DYING. A zombie environment will be freed the next time
   // it traps to the kernel.
-    
+
   // LAB 3 code
   e->env_status = ENV_DYING;
   env_free(e);
@@ -762,23 +755,23 @@ env_run(struct Env *e) {
   //	and make sure you have set the relevant parts of
   //	e->env_tf to sensible values.
   //
-    
+
   // LAB 3 code
-  if (curenv) {  // if curenv == False, значит, какого-нибудь исполняемого процесса нет
+  if (curenv) {                            // if curenv == False, значит, какого-нибудь исполняемого процесса нет
     if (curenv->env_status == ENV_DYING) { // если процесс стал зомби
-      struct Env *old = curenv;  // ставим старый адрес
-      env_free(curenv);  // самурай запятнал свой env – убираем его в ножны дабы стереть кровь
-      if (old == e) { // e - аргумент функции, который к нам пришел
-        sched_yield();  // переключение системными вызовами
+      struct Env *old = curenv;            // ставим старый адрес
+      env_free(curenv);                    // самурай запятнал свой env – убираем его в ножны дабы стереть кровь
+      if (old == e) {                      // e - аргумент функции, который к нам пришел
+        sched_yield();                     // переключение системными вызовами
       }
     } else if (curenv->env_status == ENV_RUNNING) { // если процесс можем запустить
-      curenv->env_status = ENV_RUNNABLE;  // запускаем процесс
+      curenv->env_status = ENV_RUNNABLE;            // запускаем процесс
     }
   }
-      
-  curenv = e;  // текущая среда – е
+
+  curenv             = e;           // текущая среда – е
   curenv->env_status = ENV_RUNNING; // устанавливаем статус среды на "выполняется"
-  curenv->env_runs++; // обновляем количество работающих контекстов
+  curenv->env_runs++;               // обновляем количество работающих контекстов
 
   // LAB 8 code
   lcr3(curenv->env_cr3);
@@ -788,5 +781,5 @@ env_run(struct Env *e) {
   env_pop_tf(&curenv->env_tf);
   // LAB 3 code end
 
-  while(1) {}
+  while (1) {}
 }

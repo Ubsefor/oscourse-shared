@@ -41,7 +41,7 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
 
   // LAB 8 code
   // const struct Stab *stabs, *stab_end;
-	// const char *stabstr, *stabstr_end;
+  // const char *stabstr, *stabstr_end;
   // LAB 8 code end
 
   // Initialize *info
@@ -55,7 +55,7 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
   if (!addr) {
     return 0;
   }
-  
+
   // Temporarily load kernel cr3 and return back once done.
   // Make sure that you fully understand why it is necessary.
   // LAB 8: Your code here.
@@ -100,17 +100,17 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
     // LAB 8 code end
     return code;
   }
-  
+
   // LAB 2 code
-    
+
   // Find line number corresponding to given address.
   // Hint: note that we need the address of `call` instruction, but rip holds
   // address of the next instruction, so we should substract 5 from it.
   // Hint: use line_for_address from kern/dwarf_lines.c
-    
+
   int lineno_store;
-  addr = addr - 5;
-  code = line_for_address(&addrs, addr, line_offset, &lineno_store);
+  addr           = addr - 5;
+  code           = line_for_address(&addrs, addr, line_offset, &lineno_store);
   info->rip_line = lineno_store;
   if (code < 0) {
     // LAB 8 code
@@ -118,7 +118,7 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
     // LAB 8 code end
     return code;
   }
-    
+
   //LAB 2 code end
 
   buf  = &tmp_buf;
@@ -139,32 +139,32 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
 
 uintptr_t
 find_function(const char *const fname) {
-  // There are two functions for function name lookup.
-  // address_by_fname, which looks for function name in section .debug_pubnames
-  // and naive_address_by_fname which performs full traversal of DIE tree.
-    
-  // LAB 3 code
-    
-  // LAB 6 code
-  #ifdef CONFIG_KSPACE
+// There are two functions for function name lookup.
+// address_by_fname, which looks for function name in section .debug_pubnames
+// and naive_address_by_fname which performs full traversal of DIE tree.
+
+// LAB 3 code
+
+// LAB 6 code
+#ifdef CONFIG_KSPACE
   // LAB 6 code end
   struct {
     const char *name;
     uintptr_t addr;
   } scentry[] = {
-    { "sys_yield", (uintptr_t)sys_yield },
-    { "sys_exit", (uintptr_t)sys_exit },
+      {"sys_yield", (uintptr_t)sys_yield},
+      {"sys_exit", (uintptr_t)sys_exit},
   };
 
-  for (size_t i = 0; i < sizeof(scentry)/sizeof(*scentry); i++) {
+  for (size_t i = 0; i < sizeof(scentry) / sizeof(*scentry); i++) {
     if (!strcmp(scentry[i].name, fname)) {
       return scentry[i].addr;
     }
   }
-  // LAB 6 code
-  #endif
+// LAB 6 code
+#endif
   // LAB 6 code end
-    
+
   struct Dwarf_Addrs addrs;
   load_kernel_dwarf_info(&addrs);
   uintptr_t offset = 0;

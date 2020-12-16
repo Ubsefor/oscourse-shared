@@ -19,7 +19,7 @@ umain(int argc, char **argv) {
   for (i = 0; i < ARRAYSIZE; i++)
     if (bigarray[i] != i)
       panic("bigarray[%d] didn't hold its value!\n", i);
-    
+
   cprintf("Yes, good.  Now doing a wild write off the end...\n");
   // Accessing via subscript operator ([]) will result in -Warray-bounds warning.
   *((volatile uint32_t *)bigarray + ARRAYSIZE + 0x800000) = 0;

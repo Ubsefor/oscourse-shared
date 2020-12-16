@@ -160,7 +160,7 @@ boot_alloc(uint32_t n) {
   static char *nextfree; // virtual address of next byte of free memory
 
   // LAB 6 code
-  char * result;
+  char *result;
   // LAB 6 code end
 
   // Initialize nextfree if this is the first time.
@@ -171,9 +171,9 @@ boot_alloc(uint32_t n) {
 
   // LAB 6 code
   if (!nextfree) {
-		extern char end[];
-		nextfree = ROUNDUP((char *)end, PGSIZE);
-	}
+    extern char end[];
+    nextfree = ROUNDUP((char *)end, PGSIZE);
+  }
   // LAB 6 code end
 
   // Allocate a chunk large enough to hold 'n' bytes, then update
@@ -182,12 +182,12 @@ boot_alloc(uint32_t n) {
 
   // LAB 6 code
   if (!n) {
-	    return nextfree;
-	}
-	result = nextfree;
-	nextfree += ROUNDUP(n, PGSIZE);
-	if (PADDR(nextfree) > PGSIZE * npages) {
-	    panic("Not enough memory for boot!");
+    return nextfree;
+  }
+  result = nextfree;
+  nextfree += ROUNDUP(n, PGSIZE);
+  if (PADDR(nextfree) > PGSIZE * npages) {
+    panic("Not enough memory for boot!");
   }
 
   return result;
@@ -250,17 +250,16 @@ mem_init(void) {
   // to initialize all fields of each struct PageInfo to 0.
 
   // LAB 6 code
-  pages = (struct PageInfo *)boot_alloc(sizeof(* pages) * npages);
-	memset(pages, 0, sizeof(*pages) * npages);
+  pages = (struct PageInfo *)boot_alloc(sizeof(*pages) * npages);
+  memset(pages, 0, sizeof(*pages) * npages);
   // LAB 6 code end
 
   //////////////////////////////////////////////////////////////////////
   // Make 'envs' point to an array of size 'NENV' of 'struct Env'.
 
-  // LAB 8 code 
-  envs = (struct Env *)boot_alloc(sizeof(* envs) * NENV);
-	memset(envs, 0, sizeof(*envs) * NENV);
-  // LAB 8 code end
+  // LAB 8 code
+  envs = (struct Env *)boot_alloc(sizeof(*envs) * NENV);
+  memset(envs, 0, sizeof(*envs) * NENV);
 
   //////////////////////////////////////////////////////////////////////
   // Now that we've allocated the initial kernel data structures, we set
@@ -286,7 +285,6 @@ mem_init(void) {
 
   // LAB 7 code
   boot_map_region(kern_pml4e, UPAGES, ROUNDUP(npages * sizeof(*pages), PGSIZE), PADDR(pages), PTE_U | PTE_P);
-  // LAB 7 code end
 
   //////////////////////////////////////////////////////////////////////
   // Map the 'envs' array read-only by the user at linear address UENVS
@@ -297,7 +295,6 @@ mem_init(void) {
 
   // LAB 8 code
   boot_map_region(kern_pml4e, UENVS, ROUNDUP(NENV * sizeof(*envs), PGSIZE), PADDR(envs), PTE_U | PTE_P);
-  // LAB 8 code end
 
   //////////////////////////////////////////////////////////////////////
   // Use the physical memory that 'bootstack' refers to as the kernel
@@ -312,7 +309,6 @@ mem_init(void) {
 
   // LAB 7 code
   boot_map_region(kern_pml4e, KSTACKTOP - KSTKSIZE, KSTACKTOP - (KSTACKTOP - KSTKSIZE), PADDR(bootstack), PTE_W | PTE_P);
-  // LAB 7 code end
 
   // Additionally map stack to lower 32-bit addresses.
   boot_map_region(kern_pml4e, X86ADDR(KSTACKTOP - KSTKSIZE), KSTKSIZE, PADDR(bootstack), PTE_P | PTE_W);
@@ -327,7 +323,6 @@ mem_init(void) {
 
   // LAB 7 code
   boot_map_region(kern_pml4e, KERNBASE, npages * PGSIZE, 0, PTE_W | PTE_P);
-  // LAB 7 code end
 
   // Additionally map kernel to lower 32-bit addresses. Assumes kernel should not exceed 50 mb.
   size_to_alloc = MIN(0x3200000, npages * PGSIZE);
@@ -607,9 +602,9 @@ pte_t *
 pml4e_walk(pml4e_t *pml4e, const void *va, int create) {
   // LAB 7 code
   if (pml4e[PML4(va)] & PTE_P) {
-		return pdpe_walk((pdpe_t *) KADDR(PTE_ADDR(pml4e[PML4(va)])), va, create);
-	}
-	if (create) {
+    return pdpe_walk((pdpe_t *)KADDR(PTE_ADDR(pml4e[PML4(va)])), va, create);
+  }
+  if (create) {
     struct PageInfo *np;
     np = page_alloc(ALLOC_ZERO);
     if (np) {
@@ -617,20 +612,17 @@ pml4e_walk(pml4e_t *pml4e, const void *va, int create) {
       pml4e[PML4(va)] = page2pa(np) | PTE_U | PTE_P | PTE_W;
       return pdpe_walk((pte_t *)KADDR(PTE_ADDR(pml4e[PML4(va)])), va, create);
     }
-	}
-	return NULL;
-  // LAB 7 code end
-
-  //return NULL;
+  }
+  return NULL;
 }
 
 pte_t *
 pdpe_walk(pdpe_t *pdpe, const void *va, int create) {
   // LAB 7 code
   if (pdpe[PDPE(va)] & PTE_P) {
-		return pgdir_walk((pte_t *) KADDR(PTE_ADDR(pdpe[PDPE(va)])), va, create);
-	}
-	if (create) {
+    return pgdir_walk((pte_t *)KADDR(PTE_ADDR(pdpe[PDPE(va)])), va, create);
+  }
+  if (create) {
     struct PageInfo *np;
     np = page_alloc(ALLOC_ZERO);
     if (np) {
@@ -638,32 +630,26 @@ pdpe_walk(pdpe_t *pdpe, const void *va, int create) {
       pdpe[PDPE(va)] = page2pa(np) | PTE_U | PTE_P | PTE_W;
       return pgdir_walk((pte_t *)KADDR(PTE_ADDR(pdpe[PDPE(va)])), va, create);
     }
-	}
-	return NULL;
-  // LAB 7 code end
-
-  //return NULL;
+  }
+  return NULL;
 }
 
 pte_t *
 pgdir_walk(pde_t *pgdir, const void *va, int create) {
   // LAB 7 code
   if (pgdir[PDX(va)] & PTE_P) {
-		return (pte_t *) KADDR(PTE_ADDR(pgdir[PDX(va)])) + PTX(va);
-	}
-	if (create) {
+    return (pte_t *)KADDR(PTE_ADDR(pgdir[PDX(va)])) + PTX(va);
+  }
+  if (create) {
     struct PageInfo *np;
     np = page_alloc(ALLOC_ZERO);
     if (np) {
-        np->pp_ref++;
-        pgdir[PDX(va)] = page2pa(np) | PTE_U | PTE_P | PTE_W;
-        return (pte_t *) page2kva(np) + PTX(va);
+      np->pp_ref++;
+      pgdir[PDX(va)] = page2pa(np) | PTE_U | PTE_P | PTE_W;
+      return (pte_t *)page2kva(np) + PTX(va);
     }
-	}
-	return NULL;
-  // LAB 7 code end
-
-  //return NULL;
+  }
+  return NULL;
 }
 
 //
@@ -682,9 +668,8 @@ boot_map_region(pml4e_t *pml4e, uintptr_t va, size_t size, physaddr_t pa, int pe
   // LAB 7 code
   size_t i;
   for (i = 0; i < size; i += PGSIZE) {
-		*pml4e_walk(pml4e, (void *)(va + i), 1) = (pa + i) | perm | PTE_P;
-	}
-  // LAB 7 code end
+    *pml4e_walk(pml4e, (void *)(va + i), 1) = (pa + i) | perm | PTE_P;
+  }
 }
 
 //
@@ -717,23 +702,23 @@ page_insert(pml4e_t *pml4e, struct PageInfo *pp, void *va, int perm) {
   // LAB 7 code
   pte_t *ptep;
 
-	ptep = pml4e_walk(pml4e, va, 1);
-	if (ptep == 0) {
-		return -E_NO_MEM;
+  ptep = pml4e_walk(pml4e, va, 1);
+  if (ptep == 0) {
+    return -E_NO_MEM;
   }
-	if (*ptep & PTE_P) {
-		if (PTE_ADDR(*ptep) == page2pa(pp)) {
+  if (*ptep & PTE_P) {
+    if (PTE_ADDR(*ptep) == page2pa(pp)) {
       *ptep = (*ptep & 0xfffff000) | perm | PTE_P;
     } else {
-			page_remove(pml4e, va);
-			*ptep = page2pa(pp) | perm | PTE_P;
-			pp->pp_ref++;
-			tlb_invalidate(pml4e, va);
-		}
-	} else {
-		*ptep = page2pa(pp) | perm | PTE_P;
-		pp->pp_ref++;
-	}
+      page_remove(pml4e, va);
+      *ptep = page2pa(pp) | perm | PTE_P;
+      pp->pp_ref++;
+      tlb_invalidate(pml4e, va);
+    }
+  } else {
+    *ptep = page2pa(pp) | perm | PTE_P;
+    pp->pp_ref++;
+  }
   // LAB 7 code end
   return 0;
 }
@@ -752,16 +737,16 @@ page_insert(pml4e_t *pml4e, struct PageInfo *pp, void *va, int perm) {
 struct PageInfo *
 page_lookup(pml4e_t *pml4e, void *va, pte_t **pte_store) {
   // LAB 7 code
-  pte_t * ptep;
-    
-	ptep = pml4e_walk(pml4e, va, 0);
-	if (!ptep) {
-		return NULL;
+  pte_t *ptep;
+
+  ptep = pml4e_walk(pml4e, va, 0);
+  if (!ptep) {
+    return NULL;
   }
-	if (pte_store) {
-		*pte_store = ptep;
+  if (pte_store) {
+    *pte_store = ptep;
   }
-	return pa2page(PTE_ADDR(*ptep));
+  return pa2page(PTE_ADDR(*ptep));
   // LAB 7 code end
 
   //return NULL;
@@ -785,15 +770,27 @@ page_lookup(pml4e_t *pml4e, void *va, pte_t **pte_store) {
 void
 page_remove(pml4e_t *pml4e, void *va) {
   // LAB 7 code
-  pte_t * ptep;
-	struct PageInfo * pp;
+  /*
+  pte_t *ptep;
+  struct PageInfo *pp;
 
-	pp = page_lookup(pml4e, va, &ptep);
-	if (pp) {
+  pp = page_lookup(pml4e, va, &ptep);
+  if (pp) {
     page_decref(pp);
     *ptep = 0;
     tlb_invalidate(pml4e, va);
   }
+  */
+  pte_t *ent = pml4e_walk(pml4e, va, 0);
+  if (!ent)
+    return;
+
+  if (PTE_ADDR(*ent))
+    page_decref(pa2page(PTE_ADDR(*ent)));
+  *ent = 0;
+
+  tlb_invalidate(pml4e, va);
+
   // LAB 7 code end
 }
 
@@ -844,16 +841,16 @@ mmio_map_region(physaddr_t pa, size_t size) {
   // LAB 6 code
   uintptr_t pa2 = ROUNDDOWN(pa, PGSIZE);
   if (base + size >= MMIOLIM) {
-    panic("Allocated MMIO addr is too high! [0x%016lu;0x%016lu]",pa, pa+size);
+    panic("Allocated MMIO addr is too high! [0x%016lu;0x%016lu]", pa, pa + size);
   }
 
-  size = ROUNDUP(size + (pa - pa2 ), PGSIZE);
+  size = ROUNDUP(size + (pa - pa2), PGSIZE);
   boot_map_region(kern_pml4e, base, size, pa2, PTE_PCD | PTE_PWT | PTE_W);
 
-  void * new = (void *) base;
+  void *new = (void *)base;
   base += size;
   return new;
- // LAB 6 code end
+  // LAB 6 code end
 }
 
 void *
@@ -890,12 +887,12 @@ int
 user_mem_check(struct Env *env, const void *va, size_t len, int perm) {
   // LAB 8 code
   perm |= PTE_P;
-  const void * end = va + len;
-  const void * va2 = va;
+  const void *end = va + len;
+  const void *va2 = va;
 
   va = (void *)ROUNDDOWN(va, PGSIZE);
   while (va < end) {
-    pte_t * pte = pml4e_walk(env->env_pml4e, va, 0);
+    pte_t *pte = pml4e_walk(env->env_pml4e, va, 0);
     if (!pte || (*pte & perm) != perm) {
       user_mem_check_addr = (uintptr_t)MAX(va, va2);
       return -E_FAULT;
@@ -907,7 +904,6 @@ user_mem_check(struct Env *env, const void *va, size_t len, int perm) {
     user_mem_check_addr = MAX(ULIM, (uintptr_t)va2);
     return -E_FAULT;
   }
-  // LAB 8 code end
 
   return 0;
 }

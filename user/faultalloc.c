@@ -8,9 +8,9 @@ handler(struct UTrapframe *utf) {
   void *addr = (void *)utf->utf_fault_va;
 
   cprintf("fault %lx\n", (unsigned long)addr);
-  if ((r = sys_page_alloc(0, ROUNDDOWN(addr, PGSIZE), PTE_P | PTE_U | PTE_W)) < 0) {
+  if ((r = sys_page_alloc(0, ROUNDDOWN(addr, PGSIZE),
+                          PTE_P | PTE_U | PTE_W)) < 0)
     panic("allocating at %lx in page fault handler: %i", (unsigned long)addr, r);
-  }
   snprintf((char *)addr, 100, "this string was faulted in at %lx", (unsigned long)addr);
 }
 

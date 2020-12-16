@@ -23,9 +23,8 @@ sys_cputs(const char *s, size_t len) {
   // LAB 8 code
   user_mem_assert(curenv, s, len, PTE_U);
 
-	// Print the string supplied by the user.
-	cprintf("%.*s", (int)len, s);
-  // LAB 8 code end
+  // Print the string supplied by the user.
+  cprintf("%.*s", (int)len, s);
 }
 
 // Read a character from the system console without blocking.
@@ -34,7 +33,6 @@ static int
 sys_cgetc(void) {
   // LAB 8 code
   return cons_getc();
-  // LAB 8 code end
 }
 
 // Returns the current environment's envid.
@@ -42,7 +40,6 @@ static envid_t
 sys_getenvid(void) {
   // LAB 8 code
   return curenv->env_id;
-  // LAB 8 code end
 }
 
 // Destroy a given environment (possibly the currently running environment).
@@ -54,17 +51,36 @@ static int
 sys_env_destroy(envid_t envid) {
   // LAB 8 code
   int r;
-	struct Env *e;
+  struct Env *e;
 
-	if ((r = envid2env(envid, &e, 1)) < 0)
-		return r;
-	if (e == curenv)
-		cprintf("[%08x] exiting gracefully\n", curenv->env_id);
-	else
-		cprintf("[%08x] destroying %08x\n", curenv->env_id, e->env_id);
-	env_destroy(e);
-	return 0;
-  // LAB 8 code end
+  if ((r = envid2env(envid, &e, 1)) < 0)
+    return r;
+  if (e == curenv)
+    cprintf("[%08x] exiting gracefully\n", curenv->env_id);
+  else
+    cprintf("[%08x] destroying %08x\n", curenv->env_id, e->env_id);
+  env_destroy(e);
+  return 0;
+}
+
+static int
+sys_env_set_trapframe(envid_t envid, struct Trapframe *tf) {
+  struct Env *env;
+  int res = envid2env(envid, &env, 1);
+
+  if (res < 0)
+    return res;
+
+  user_mem_assert(curenv, tf, sizeof(*tf), 0);
+
+  env->env_tf       = *tf;
+  env->env_tf.tf_cs = GD_UT | 3;
+  env->env_tf.tf_ds = GD_UD | 3;
+  env->env_tf.tf_es = GD_UD | 3;
+  env->env_tf.tf_ss = GD_UD | 3;
+  env->env_tf.tf_rflags &= 0xFFF;
+  env->env_tf.tf_rflags |= FL_IF;
+  return 0;
 }
 
 // Deschedule current environment and pick a different one to run.
@@ -85,23 +101,19 @@ sys_exofork(void) {
   // from the current environment -- but tweaked so sys_exofork
   // will appear to return 0.
 
-  // LAB 9 code
+  // LAB 9: Your code here.
   struct Env *e = NULL;
   int res;
 
   if ((res = env_alloc(&e, curenv->env_id)) < 0) {
     return res;
   }
-
-  e->env_status = ENV_NOT_RUNNABLE;
-  e->env_tf = curenv->env_tf;
+  e->env_status         = ENV_NOT_RUNNABLE;
+  e->env_tf             = curenv->env_tf;
   e->env_pgfault_upcall = curenv->env_pgfault_upcall;
 
-	e->env_tf.tf_regs.reg_rax = 0;
-
-	return e->env_id; 
-  // LAB 9 code end
-  // return -1;
+  e->env_tf.tf_regs.reg_rax = 0;
+  return e->env_id;
 }
 
 // Set envid's env_status to status, which must be ENV_RUNNABLE
@@ -119,39 +131,16 @@ sys_env_set_status(envid_t envid, int status) {
   // check whether the current environment has permission to set
   // envid's status.
 
-  // LAB 9 code
+  // LAB 9: Your code here.
   struct Env *e;
   if (envid2env(envid, &e, 1) < 0) {
-      return -E_BAD_ENV;
+    return -E_BAD_ENV;
   }
   if (!(status == ENV_RUNNABLE || status == ENV_NOT_RUNNABLE)) {
-      return -E_INVAL;
+    return -E_INVAL;
   }
   e->env_status = status;
   return 0;
-  // LAB 9 code end
-  return -1;
-}
-
-static int
-sys_env_set_trapframe(envid_t envid, struct Trapframe *tf) {
-  // LAB 11 code
-  struct Env *env;
-  int res = envid2env(envid, &env, 1);
- 
-  if (res < 0) return res;
- 
-  user_mem_assert(curenv, tf, sizeof(*tf), 0);
- 
-  env->env_tf = *tf;
-  env->env_tf.tf_cs = GD_UT | 3;
-  env->env_tf.tf_ds = GD_UD | 3;
-  env->env_tf.tf_es = GD_UD | 3;
-  env->env_tf.tf_ss = GD_UD | 3;
-  env->env_tf.tf_rflags &= 0xFFF;
-  env->env_tf.tf_rflags |= FL_IF;
-  return 0;
-	// LAB 11 code end
 }
 
 // Set the page fault upcall for 'envid' by modifying the corresponding struct
@@ -164,16 +153,13 @@ sys_env_set_trapframe(envid_t envid, struct Trapframe *tf) {
 //		or the caller doesn't have permission to change envid.
 static int
 sys_env_set_pgfault_upcall(envid_t envid, void *func) {
-  // LAB 9 code
+  // LAB 9: Your code here.
   struct Env *e;
   if (envid2env(envid, &e, 1) < 0) {
     return -E_BAD_ENV;
   }
   e->env_pgfault_upcall = func;
   return 0;
-  // LAB 9 code
-
-  // return -1;
 }
 
 // Allocate a page of memory and map it at 'va' with permission
@@ -201,28 +187,32 @@ sys_page_alloc(envid_t envid, void *va, int perm) {
   //   If page_insert() fails, remember to free the page you
   //   allocated!
 
-  // LAB 9 code
+  // LAB 9: Your code here.
   struct PageInfo *pp;
-	struct Env *e;
+  struct Env *e;
 
-	if (envid2env(envid, &e, 1) < 0) {
-		return -E_BAD_ENV;
-	}
-  if ((uintptr_t) va >= UTOP || PGOFF(va)) {
+  if (envid2env(envid, &e, 1) < 0) {
+    return -E_BAD_ENV;
+  }
+
+  if ((uintptr_t)va >= UTOP || PGOFF(va)) {
     return -E_INVAL;
   }
+
   if (perm & ~PTE_SYSCALL) {
     return -E_INVAL;
   }
+
   if (!(pp = page_alloc(ALLOC_ZERO))) {
     return -E_NO_MEM;
   }
+
   if (page_insert(e->env_pml4e, pp, va, perm | PTE_U) < 0) {
     page_free(pp);
     return -E_NO_MEM;
   }
+
   return 0;
-  // LAB 9 code end
 }
 
 // Map the page of memory at 'srcva' in srcenvid's address space
@@ -251,34 +241,37 @@ sys_page_map(envid_t srcenvid, void *srcva,
   //   Use the third argument to page_lookup() to
   //   check the current permissions on the page.
 
-  // LAB 9 code
+  // LAB 9: Your code here.
   struct Env *srcenv, *dstenv;
-	struct PageInfo *pp;
+  struct PageInfo *pp;
   pte_t *ptep;
 
   if (envid2env(srcenvid, &srcenv, 1) < 0 || envid2env(dstenvid, &dstenv, 1) < 0) {
     return -E_BAD_ENV;
   }
-  if ((uintptr_t) srcva >= UTOP || PGOFF(srcva) || 
-      (uintptr_t) dstva >= UTOP || PGOFF(dstva)) {
+
+  if ((uintptr_t)srcva >= UTOP || PGOFF(srcva) ||
+      (uintptr_t)dstva >= UTOP || PGOFF(dstva)) {
     return -E_INVAL;
   }
+
   if (perm & ~PTE_SYSCALL) {
     return -E_INVAL;
   }
-  if (!(pp = page_lookup(srcenv->env_pml4e, srcva, &ptep))) { 
-    return -E_INVAL;
-	}
-	if (!(*ptep & PTE_W) && (perm & PTE_W)) {
-	  return -E_INVAL;
-	}
-	if (page_insert(dstenv->env_pml4e, pp, dstva, perm | PTE_U)) {
-		return -E_NO_MEM;
-	}
-  return 0;
-  // LAB 9 code end
 
-  // return -1;
+  if (!(pp = page_lookup(srcenv->env_pml4e, srcva, &ptep))) {
+    return -E_INVAL;
+  }
+
+  if (!(*ptep & PTE_W) && (perm & PTE_W)) {
+    return -E_INVAL;
+  }
+
+  if (page_insert(dstenv->env_pml4e, pp, dstva, perm | PTE_U)) {
+    return -E_NO_MEM;
+  }
+
+  return 0;
 }
 
 // Unmap the page of memory at 'va' in the address space of 'envid'.
@@ -292,20 +285,19 @@ static int
 sys_page_unmap(envid_t envid, void *va) {
   // Hint: This function is a wrapper around page_remove().
 
-  // LAB 9 code
+  // LAB 9: Your code here.
   struct Env *e;
-    
+
   if (envid2env(envid, &e, 1) < 0) {
     return -E_BAD_ENV;
   }
-	if ((uintptr_t)va >= UTOP || PGOFF(va)) {
-    return -E_INVAL;
-	}
-	page_remove(e->env_pml4e, va);
-	return 0;
-  // LAB 9 code end
 
-  // return -1;
+  if ((uintptr_t)va >= UTOP || PGOFF(va)) {
+    return -E_INVAL;
+  }
+
+  page_remove(e->env_pml4e, va);
+  return 0;
 }
 
 // Try to send 'value' to the target env 'envid'.
@@ -348,46 +340,57 @@ sys_page_unmap(envid_t envid, void *va) {
 //		address space.
 static int
 sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm) {
-  // LAB 9 code
+  // LAB 9: Your code here.
   struct Env *e;
-	struct PageInfo *p;
-	pte_t *ptep;
+  struct PageInfo *p;
+  pte_t *ptep;
 
-	if (envid2env(envid, &e, 0) < 0) {
-		return -E_BAD_ENV;
-	}
-	if (!e->env_ipc_recving) {
-		return -E_IPC_NOT_RECV;
-	}
+  if (envid2env(envid, &e, 0) < 0) {
+    cprintf("\nA bad env for a bad day and its all there is\n");
+    return -E_BAD_ENV;
+  }
 
-	if ((uintptr_t) srcva < UTOP) {
-		if (PGOFF(srcva)) {
-			return -E_INVAL;
-		}
-		if ((perm & ~(PTE_AVAIL | PTE_W)) != (PTE_U | PTE_P)) {
+  if (!e->env_ipc_recving) {
+    // actually ok
+    return -E_IPC_NOT_RECV;
+  }
+
+  if ((uintptr_t)srcva < UTOP) {
+    if (PGOFF(srcva)) {
+      cprintf("\nsrcva < UTOP\n");
       return -E_INVAL;
     }
-		if (!(p = page_lookup(curenv->env_pml4e, srcva, &ptep))) {
-			return -E_INVAL;
-		}
-		if (!(*ptep & PTE_W) && (perm & PTE_W)) {
-			return -E_INVAL;
-		}
-		if (page_insert(e->env_pml4e, p, e->env_ipc_dstva, perm)) {
-			return -E_NO_MEM;
-		}
-    e->env_ipc_perm = perm;
-	} else {
-		e->env_ipc_perm = 0;
-	}
-	e->env_ipc_recving = 0;
-	e->env_ipc_from = curenv->env_id;
-	e->env_ipc_value = value;
-	e->env_status = ENV_RUNNABLE;
-	return 0;
-  // LAB 9 code end
 
-  // return -1;
+    if ((perm & ~(PTE_AVAIL | PTE_W)) != (PTE_U | PTE_P)) {
+      cprintf("\nThis is about to get baad permissions very soon...\n");
+      return -E_INVAL;
+    }
+
+    if (!(p = page_lookup(curenv->env_pml4e, srcva, &ptep))) {
+      cprintf("\nPage lookup error!\n");
+      return -E_INVAL;
+    }
+
+    if (!(*ptep & PTE_W) && (perm & PTE_W)) {
+      cprintf("\nI am quite bound by those permissions...\n");
+      return -E_INVAL;
+    }
+
+    if (page_insert(e->env_pml4e, p, e->env_ipc_dstva, perm)) {
+      cprintf("\nI did not expect the page insert to fail...\n");
+      return -E_NO_MEM;
+    }
+    e->env_ipc_perm = perm;
+  } else {
+    e->env_ipc_perm = 0;
+  }
+
+  e->env_ipc_recving = 0;
+  e->env_ipc_from    = curenv->env_id;
+  e->env_ipc_value   = value;
+  e->env_status      = ENV_RUNNABLE;
+
+  return 0;
 }
 
 // Block until a value is ready.  Record that you want to receive
@@ -403,19 +406,18 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm) {
 //	-E_INVAL if dstva < UTOP but dstva is not page-aligned.
 static int
 sys_ipc_recv(void *dstva) {
-  // LAB 9 code
+  // LAB 9: Your code here.
   if ((uintptr_t)dstva < UTOP && PGOFF(dstva)) {
     return -E_INVAL;
   }
-	curenv->env_ipc_recving = 1;
-	curenv->env_ipc_dstva = dstva;
-	curenv->env_status = ENV_NOT_RUNNABLE;
-  curenv->env_tf.tf_regs.reg_rax = 0;
-	sched_yield();
-	return 0;
-  // LAB 9 code end
 
-  // return -1;
+  curenv->env_ipc_recving        = 1;
+  curenv->env_ipc_dstva          = dstva;
+  curenv->env_status             = ENV_NOT_RUNNABLE;
+  curenv->env_tf.tf_regs.reg_rax = 0;
+
+  sched_yield();
+  return 0;
 }
 
 // Dispatches to the correct kernel function, passing the arguments.
@@ -423,46 +425,39 @@ uintptr_t
 syscall(uintptr_t syscallno, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5) {
   // Call the function corresponding to the 'syscallno' parameter.
   // Return any appropriate return value.
-
-  // LAB 8 code
+  // LAB 8: Your code here.
   if (syscallno == SYS_cputs) {
-    sys_cputs((const char *) a1, (size_t) a2);
+    sys_cputs((const char *)a1, (size_t)a2);
     return 0;
   } else if (syscallno == SYS_cgetc) {
     return sys_cgetc();
   } else if (syscallno == SYS_getenvid) {
     return sys_getenvid();
   } else if (syscallno == SYS_env_destroy) {
-    return sys_env_destroy((envid_t) a1);
-  // LAB 8 code end
-  // LAB 9 code
+    return sys_env_destroy((envid_t)a1);
+    // LAB 9: Your code here.
   } else if (syscallno == SYS_exofork) {
     return sys_exofork();
   } else if (syscallno == SYS_env_set_status) {
-    return sys_env_set_status((envid_t) a1, (int) a2);
+    return sys_env_set_status((envid_t)a1, (int)a2);
   } else if (syscallno == SYS_page_alloc) {
-    return sys_page_alloc((envid_t) a1, (void *) a2, (int) a3);
+    return sys_page_alloc((envid_t)a1, (void *)a2, (int)a3);
   } else if (syscallno == SYS_page_map) {
-    return sys_page_map((envid_t) a1, (void *) a2, (envid_t) a3, (void *) a4, (int) a5);
+    return sys_page_map((envid_t)a1, (void *)a2, (envid_t)a3, (void *)a4, (int)a5);
   } else if (syscallno == SYS_page_unmap) {
-    return sys_page_unmap((envid_t) a1, (void *) a2);
+    return sys_page_unmap((envid_t)a1, (void *)a2);
   } else if (syscallno == SYS_env_set_pgfault_upcall) {
-    return sys_env_set_pgfault_upcall((envid_t) a1, (void *) a2);
+    return sys_env_set_pgfault_upcall((envid_t)a1, (void *)a2);
   } else if (syscallno == SYS_yield) {
     sys_yield();
     return 0;
   } else if (syscallno == SYS_ipc_try_send) {
-    return sys_ipc_try_send((envid_t) a1, (uint32_t) a2, (void *) a3, (unsigned) a4);
+    return sys_ipc_try_send((envid_t)a1, (uint32_t)a2, (void *)a3, (unsigned)a4);
   } else if (syscallno == SYS_ipc_recv) {
-    return sys_ipc_recv((void *) a1);
-  // LAB 9 code end
-  // LAB 11 code
+    return sys_ipc_recv((void *)a1);
   } else if (syscallno == SYS_env_set_trapframe) {
-    return sys_env_set_trapframe((envid_t) a1, (struct Trapframe *) a2);
-  // LAB 11 code end
-  } else {
-    return -E_INVAL;
+    return sys_env_set_trapframe((envid_t)a1, (struct Trapframe *)a2);
   }
-  
-  // return -E_INVAL;
+
+  return -E_INVAL;
 }

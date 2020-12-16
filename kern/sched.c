@@ -32,7 +32,7 @@ sched_yield(void) {
   do {
     id = (id + 1) % NENV;
     if (envs[id].env_status == ENV_RUNNABLE ||
-       (id == orig && envs[id].env_status == ENV_RUNNING)) {
+        (id == orig && envs[id].env_status == ENV_RUNNING)) {
       // Found suitable environment to run
       env_run(envs + id);
     }

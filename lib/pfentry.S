@@ -40,7 +40,7 @@ _pgfault_upcall:
 	
 	// Now the C page fault handler has returned and you must return
 	// to the trap time state.
-	// Push trap-time %eip onto the trap-time stack.
+	// Push trap-time %rip onto the trap-time stack.
 	//
 	// Explanation:
 	//   We must prepare the trap-time stack for our eventual return to
@@ -50,10 +50,10 @@ _pgfault_upcall:
 	//   into a register, and all registers must have their trap-time
 	//   values after the return.
 	//   We can't call 'ret' from the exception stack either, since if we
-	//   did, %esp would have the wrong value.
-	//   So instead, we push the trap-time %eip onto the *trap-time* stack!
+	//   did, %rsp would have the wrong value.
+	//   So instead, we push the trap-time %rip onto the *trap-time* stack!
 	//   Below we'll switch to that stack and call 'ret', which will
-	//   restore %eip to its pre-fault value.
+	//   restore %rip to its pre-fault value.
 	//
 	//   In the case of a recursive fault on the exception stack,
 	//   note that the word we're pushing now will fit in the
@@ -66,8 +66,7 @@ _pgfault_upcall:
 
 	// Restore the trap-time registers.  After you do this, you
 	// can no longer modify any general-purpose registers.
-
-	// LAB 9 code
+	// LAB 9: Your code here.
 	popq %r15
 	popq %r15
 	popq %r15
@@ -92,25 +91,18 @@ _pgfault_upcall:
 
 	popq %rbx
 	popq %rax
-	// LAB 9 code end
 
 	// Restore rflags from the stack.  After you do this, you can
 	// no longer use arithmetic operations or anything else that
 	// modifies rflags.
-
-	// LAB 9 code
+	// LAB 9: Your code here.
 	pushq 8(%rsp)
 	popfq
-	// LAB 9 code end
 
 	// Switch back to the adjusted trap-time stack.
-
-	// LAB 9 code
+	// LAB 9: Your code here.
 	movq 16(%rsp), %rsp
-	// LAB 9 code end
 
 	// Return to re-execute the instruction that faulted.
-
-	// LAB 9 code
+	// LAB 9: Your code here.
 	ret
-	// LAB 9 code end

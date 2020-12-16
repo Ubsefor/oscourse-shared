@@ -135,11 +135,6 @@ i386_init(void) {
     ctor++;
   }
 
-  // LAB 5 code
-  // pic_init();
-  // rtc_init();
-  // LAB 5 code end
-
 #ifdef SANITIZE_SHADOW_BASE
   kasan_mem_init();
 #endif
@@ -156,18 +151,7 @@ i386_init(void) {
 
   // choose the timer used for scheduling: hpet or pit
   timers_schedule("hpet0");
-
   clock_idt_init();
-
-  // DELETED in LAB 5
-  // LAB 4 code
-  // pic_init();
-  // rtc_init();
-
-  // размаскирование на контроллере линии IRQ_CLOCK, по которой приходят прерывания от часов
-  // irq_setmask_8259A(~(~irq_mask_8259A | (1 << IRQ_CLOCK)));
-  // LAB 4 code end
-  // DELETED in LAB 5 end
 
 #ifdef CONFIG_KSPACE
   // Touch all you want.

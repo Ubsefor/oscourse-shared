@@ -7,7 +7,7 @@
 #include <inc/string.h>
 
 #include "fs.h"
-
+#define BUFSIZE PGSIZE - sizeof(int) - sizeof(size_t)
 // The file system server maintains three structures
 // for each open file.
 //
@@ -205,6 +205,9 @@ serve_read(envid_t envid, union Fsipc *ipc) {
 
   if ((r = openfile_lookup(envid, req->req_fileid, &o)) < 0) {
     return r;
+  }
+  if (req->req_n > BUFSIZE) {
+    req->req_n = BUFSIZE;
   }
 
   int count = file_read(o->o_file, ret->ret_buf, req->req_n, o->o_fd->fd_offset);

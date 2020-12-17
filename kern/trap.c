@@ -233,9 +233,9 @@ trap_dispatch(struct Trapframe *tf) {
   if (tf->tf_trapno == IRQ_OFFSET + IRQ_SPURIOUS) {
     cprintf("Spurious interrupt on irq 7\n");
     // LAB 11 code
+    print_trapframe(tf);
     pic_send_eoi(IRQ_SPURIOUS);
     sched_yield();
-    // LAB 11 code end
     return;
   }
 
@@ -253,7 +253,6 @@ trap_dispatch(struct Trapframe *tf) {
     // LAB 4 code end
 
     timer_for_schedule->handle_interrupts();
-
     sched_yield();
     return;
   }

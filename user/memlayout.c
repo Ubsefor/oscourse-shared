@@ -31,9 +31,9 @@ memlayout(void) {
     pg = (pte_t *)uvpt + VPN(addr);
     cprintf("[%p] %lx -> %08lx: %c %c %c |%s%s\n",
             pg, (unsigned long)addr, (unsigned long)*pg,
-            (*pg & PTE_P) ? total_p++, 'P' : '-',
-            (*pg & PTE_U) ? total_u++, 'U' : '-',
-            (*pg & PTE_W) ? total_w++, 'W' : '-',
+            (*pg & PTE_P)   ? total_p++, 'P' : '-',
+            (*pg & PTE_U)   ? total_u++, 'U' : '-',
+            (*pg & PTE_W)   ? total_w++, 'W' : '-',
             (*pg & PTE_COW) ? total_cow++, " COW" : "",
             (*pg & PTE_SHARE) ? " SHARE" : "");
   }

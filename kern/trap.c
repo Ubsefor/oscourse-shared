@@ -213,9 +213,7 @@ trap_dispatch(struct Trapframe *tf) {
     a5                  = tf->tf_regs.reg_rsi;
     ret                 = syscall(syscallno, a1, a2, a3, a4, a5);
     tf->tf_regs.reg_rax = ret;
-    // DELETED in LAB 9
-    // print_trapframe(tf);
-    // DELETED in LAB 9 end
+    //print_trapframe(tf);
     return;
   }
 
@@ -237,9 +235,9 @@ trap_dispatch(struct Trapframe *tf) {
   if (tf->tf_trapno == IRQ_OFFSET + IRQ_SPURIOUS) {
     cprintf("Spurious interrupt on irq 7\n");
     // LAB 11 code
+    print_trapframe(tf);
     pic_send_eoi(IRQ_SPURIOUS);
     sched_yield();
-    // LAB 11 code end
     return;
   }
 
@@ -250,7 +248,6 @@ trap_dispatch(struct Trapframe *tf) {
     rtc_check_status();
     // DELETED in LAB 12
     // pic_send_eoi(IRQ_CLOCK);
-    // DELETED in LAB 12
 
     // читаем регистр статуса RTC и отправляем сигнал EOI на контроллер прерываний,
     // сигнализируя об окончании обработки прерывания
@@ -258,18 +255,20 @@ trap_dispatch(struct Trapframe *tf) {
     // LAB 4 code end
 
     // Update vsys memory with current time.
-    // LAB 12 code
+    // LAB 12: Your code here.
     vsys[VSYS_gettime] = gettime();
     pic_send_eoi(IRQ_CLOCK);
     // LAB 12 code end
     timer_for_schedule->handle_interrupts();
 
+    timer_for_schedule->handle_interrupts();
     sched_yield();
     return;
   }
 
   // Handle keyboard and serial interrupts.
-  // LAB 11 code
+  // LAB 11: Your code here.
+
   if (tf->tf_trapno == IRQ_OFFSET + IRQ_KBD) {
     kbd_intr();
     pic_send_eoi(IRQ_KBD);
@@ -282,10 +281,8 @@ trap_dispatch(struct Trapframe *tf) {
     sched_yield();
     return;
   }
-  // LAB 11 code end
 
   print_trapframe(tf);
-
   if (!(tf->tf_cs & 0x3)) {
     panic("unhandled trap in kernel");
   } else {
@@ -297,8 +294,7 @@ void
 trap(struct Trapframe *tf) {
   // The environment may have set DF and some versions
   // of GCC rely on DF being clear
-  asm volatile("cld" ::
-                   : "cc");
+  asm volatile("cld" ::: "cc");
 
   // Halt the CPU if some other CPU has called panic()
   extern char *panicstr;
@@ -361,10 +357,6 @@ page_fault_handler(struct Trapframe *tf) {
   if (!(tf->tf_cs & 3)) {
     panic("page fault in kernel!");
   }
-  // LAB 8 code end
-
-  // We've already handled kernel-mode exceptions, so if we get here,
-  // the page fault happened in user mode.
 
   // We've already handled kernel-mode exceptions, so if we get here,
   // the page fault happened in user mode.
@@ -397,7 +389,7 @@ page_fault_handler(struct Trapframe *tf) {
   //   To change what the user environment runs, modify 'curenv->env_tf'
   //   (the 'tf' variable points at 'curenv->env_tf').
 
-  // LAB 9 code
+  // LAB 9: Your code here.
   struct UTrapframe *utf;
   uintptr_t uxrsp;
 
@@ -421,14 +413,11 @@ page_fault_handler(struct Trapframe *tf) {
     tf->tf_rip        = (uintptr_t)curenv->env_pgfault_upcall;
     env_run(curenv);
   }
-  // LAB 9 code end
 
+  // LAB 8: Your code here.
   // Destroy the environment that caused the fault.
-
-  // LAB 8 code
   cprintf("[%08x] user fault va %08lx ip %08lx\n",
           curenv->env_id, fault_va, tf->tf_rip);
   print_trapframe(tf);
   env_destroy(curenv);
-  // LAB 8 code end
 }

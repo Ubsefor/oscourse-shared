@@ -1,26 +1,23 @@
 // Simple implementation of cprintf console output for the kernel,
 // based on printfmt() and the kernel console's cputchar().
 
-#include <inc/types.h>
-#include <inc/stdio.h>
 #include <inc/stdarg.h>
+#include <inc/stdio.h>
+#include <inc/types.h>
 
-static void
-putch(int ch, int *cnt) {
+static void putch(int ch, int *cnt) {
   cputchar(ch);
   (*cnt)++;
 }
 
-int
-vcprintf(const char *fmt, va_list ap) {
+int vcprintf(const char *fmt, va_list ap) {
   int cnt = 0;
 
   vprintfmt((void *)putch, &cnt, fmt, ap);
   return cnt;
 }
 
-int
-cprintf(const char *fmt, ...) {
+int cprintf(const char *fmt, ...) {
   va_list ap;
   int cnt;
 

@@ -1,10 +1,9 @@
-#include <inc/x86.h>
 #include <inc/lib.h>
+#include <inc/x86.h>
 
 void wrong(int, int, int);
 
-void
-umain(int argc, char **argv) {
+void umain(int argc, char **argv) {
   char c1, c2;
   int r, rfd, wfd, kfd, n1, n2, off, nloff;
   int pfds[2];
@@ -62,8 +61,7 @@ umain(int argc, char **argv) {
   breakpoint();
 }
 
-void
-wrong(int rfd, int kfd, int off) {
+void wrong(int rfd, int kfd, int off) {
   char buf[100];
   int n;
 

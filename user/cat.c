@@ -2,8 +2,7 @@
 
 char buf[8192];
 
-void
-cat(int f, char *s) {
+void cat(int f, char *s) {
   long n;
   int r;
 
@@ -14,8 +13,7 @@ cat(int f, char *s) {
     panic("error reading %s: %i", s, (int)n);
 }
 
-void
-umain(int argc, char **argv) {
+void umain(int argc, char **argv) {
   int f, i;
 
   binaryname = "cat";

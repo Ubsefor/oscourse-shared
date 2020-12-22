@@ -7,8 +7,7 @@ struct Taskstate cpu_ts;
 void sched_halt(void);
 
 // Choose a user environment to run and run it.
-void
-sched_yield(void) {
+void sched_yield(void) {
   // Implement simple round-robin scheduling.
   //
   // Search through 'envs' for an ENV_RUNNABLE environment in
@@ -26,7 +25,7 @@ sched_yield(void) {
   // LAB 3 code
   // If no current environment,
   // start scanning from the beginning of array
-  int id   = curenv ? ENVX(curenv_getid()) : 0;
+  int id = curenv ? ENVX(curenv_getid()) : 0;
   int orig = id;
 
   do {
@@ -45,16 +44,14 @@ sched_yield(void) {
 // Halt this CPU when there is nothing to do. Wait until the
 // timer interrupt wakes it up. This function never returns.
 //
-void
-sched_halt(void) {
+void sched_halt(void) {
   int i;
 
   // For debugging and testing purposes, if there are no runnable
   // environments in the system, then drop into the kernel monitor.
   for (i = 0; i < NENV; i++) {
     if ((envs[i].env_status == ENV_RUNNABLE ||
-         envs[i].env_status == ENV_RUNNING ||
-         envs[i].env_status == ENV_DYING))
+         envs[i].env_status == ENV_RUNNING || envs[i].env_status == ENV_DYING))
       break;
   }
   if (i == NENV) {
@@ -67,13 +64,12 @@ sched_halt(void) {
   curenv = NULL;
 
   // Reset stack pointer, enable interrupts and then halt.
-  asm volatile(
-      "movq $0, %%rbp\n"
-      "movq %0, %%rsp\n"
-      "pushq $0\n"
-      "pushq $0\n"
-      "sti\n"
-      "hlt\n"
-      :
-      : "a"(cpu_ts.ts_esp0));
+  asm volatile("movq $0, %%rbp\n"
+               "movq %0, %%rsp\n"
+               "pushq $0\n"
+               "pushq $0\n"
+               "sti\n"
+               "hlt\n"
+               :
+               : "a"(cpu_ts.ts_esp0));
 }

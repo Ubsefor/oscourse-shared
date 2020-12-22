@@ -3,22 +3,18 @@
 struct {
   char msg1[5000];
   char msg2[1000];
-} data = {
-    "this is initialized data",
-    "so is this"};
+} data = {"this is initialized data", "so is this"};
 
 char bss[6000];
 
-int
-sum(const char *s, int n) {
+int sum(const char *s, int n) {
   int i, tot = 0;
   for (i = 0; i < n; i++)
     tot ^= i * s[i];
   return tot;
 }
 
-void
-umain(int argc, char **argv) {
+void umain(int argc, char **argv) {
   int i, r, x, want;
   char args[256];
 
@@ -26,8 +22,8 @@ umain(int argc, char **argv) {
 
   want = 0xf989e;
   if ((x = sum((char *)&data, sizeof data)) != want)
-    cprintf("init: data is not initialized: got sum %08x wanted %08x\n",
-            x, want);
+    cprintf("init: data is not initialized: got sum %08x wanted %08x\n", x,
+            want);
   else
     cprintf("init: data seems okay\n");
   if ((x = sum(bss, sizeof bss)) != 0)

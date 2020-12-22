@@ -13,8 +13,7 @@ struct printbuf {
   char buf[256];
 };
 
-static void
-writebuf(struct printbuf *b) {
+static void writebuf(struct printbuf *b) {
   if (b->error > 0) {
     ssize_t result = write(b->fd, b->buf, b->idx);
     if (result > 0)
@@ -24,24 +23,22 @@ writebuf(struct printbuf *b) {
   }
 }
 
-static void
-putch(int ch, void *thunk) {
+static void putch(int ch, void *thunk) {
   struct printbuf *b = (struct printbuf *)thunk;
-  b->buf[b->idx++]   = ch;
+  b->buf[b->idx++] = ch;
   if (b->idx == 256) {
     writebuf(b);
     b->idx = 0;
   }
 }
 
-int
-vfprintf(int fd, const char *fmt, va_list ap) {
+int vfprintf(int fd, const char *fmt, va_list ap) {
   struct printbuf b;
 
-  b.fd     = fd;
-  b.idx    = 0;
+  b.fd = fd;
+  b.idx = 0;
   b.result = 0;
-  b.error  = 1;
+  b.error = 1;
   vprintfmt(putch, &b, fmt, ap);
   if (b.idx > 0)
     writebuf(&b);
@@ -49,8 +46,7 @@ vfprintf(int fd, const char *fmt, va_list ap) {
   return (b.result ? b.result : b.error);
 }
 
-int
-fprintf(int fd, const char *fmt, ...) {
+int fprintf(int fd, const char *fmt, ...) {
   va_list ap;
   int cnt;
 
@@ -61,8 +57,7 @@ fprintf(int fd, const char *fmt, ...) {
   return cnt;
 }
 
-int
-printf(const char *fmt, ...) {
+int printf(const char *fmt, ...) {
   va_list ap;
   int cnt;
 

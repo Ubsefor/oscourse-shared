@@ -4,7 +4,7 @@
 .data
 // Define the global symbols 'envs', 'pages', 'vsys', 'uvpt', 'uvpd', 'uvpde' and 'uvpml4e'
 // so that they can be used in C as if they were ordinary global arrays.
-  // LAB 12 code
+// LAB 12: Your code here.
   .global vsys
   .set vsys, UVSYS
   // LAB 12 code end

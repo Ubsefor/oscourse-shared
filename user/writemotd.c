@@ -1,7 +1,6 @@
 #include <inc/lib.h>
 
-void
-umain(int argc, char **argv) {
+void umain(int argc, char **argv) {
   int rfd, wfd;
   char buf[512];
   int n, r;

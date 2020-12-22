@@ -211,8 +211,6 @@ env_setup_vm(struct Env *e) {
   pa2page(PTE_ADDR(kern_pml4e[1]))->pp_ref++;
 
   e->env_pml4e[2] = e->env_cr3 | PTE_P | PTE_U;
-  // LAB 8 code end
-
   return 0;
 }
 
@@ -332,7 +330,6 @@ region_alloc(struct Env *e, void *va, size_t len) {
     page_insert(e->env_pml4e, pi, va, PTE_U | PTE_W);
     va += PGSIZE;
   }
-  // LAB 8 code end
 }
 
 #ifdef SANITIZE_USER_SHADOW_BASE
@@ -488,7 +485,7 @@ load_icode(struct Env *e, uint8_t *binary) {
 
       region_alloc(e, (void *)dst, memsz);
 
-      memcpy(dst, src, filesz);
+      memcpy(dst, src, filesz);                // копируем в dst <- src  размера filesz
       memset(dst + filesz, 0, memsz - filesz); // обнуление памяти по адресу dst + filesz, где количество нулей = memsz - filesz. Т.е. зануляем всю выделенную память сегмента кода, оставшуюяся после копирования src. Возможно, эта строка не нужна
     }
   }
@@ -539,13 +536,11 @@ env_create(uint8_t *binary, enum EnvType type) {
   newenv->env_type = type;
 
   load_icode(newenv, binary); // load instruction code
-  // LAB 3 code end
 
-  // LAB 10 code
+  // LAB 10 Your code here.
   if (type == ENV_TYPE_FS) {
     newenv->env_tf.tf_rflags |= FL_IOPL_3;
   }
-  // LAB 10 code end
 }
 
 //
@@ -740,7 +735,8 @@ env_run(struct Env *e) {
 #ifdef CONFIG_KSPACE
   cprintf("envrun %s: %d\n",
           e->env_status == ENV_RUNNING ? "RUNNING" :
-                                         e->env_status == ENV_RUNNABLE ? "RUNNABLE" : "(unknown)",
+                                         e->env_status == ENV_RUNNABLE ? "RUNNABLE" :
+                                                                         "(unknown)",
           ENVX(e->env_id));
 #endif
 

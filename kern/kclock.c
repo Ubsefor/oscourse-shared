@@ -9,9 +9,6 @@
 
 static void
 rtc_timer_init(void) {
-  // DELETED in LAB 5
-  // pic_init();
-  // DELETED in LAB 5 end
   pic_init();
   rtc_init();
 }
@@ -64,11 +61,11 @@ get_time(void) {
     Y = BCD2BIN(Y);
   }
 
-  time.tm_sec  = s;
-  time.tm_min  = m;
+  time.tm_sec = s;
+  time.tm_min = m;
   time.tm_hour = h;
   time.tm_mday = d;
-  time.tm_mon  = M - 1;
+  time.tm_mon = M - 1;
   time.tm_year = y + Y * 100 - 1900;
 
   return timestamp(&time);
@@ -77,7 +74,7 @@ get_time(void) {
 int
 gettime(void) {
   nmi_disable();
-  // LAB 12 code
+  // LAB 12: your code here
   int t;
   while (mc146818_read(RTC_AREG) & RTC_UPDATE_IN_PROGRESS)
     ;
@@ -86,9 +83,7 @@ gettime(void) {
   }
   // LAB 12 code end
   nmi_enable();
-  // LAB 12 code
   return t;
-  // LAB 12 code end
 }
 
 void

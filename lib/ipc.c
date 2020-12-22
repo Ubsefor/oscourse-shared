@@ -19,8 +19,7 @@
 //   If 'pg' is null, pass sys_ipc_recv a value that it will understand
 //   as meaning "no page".  (Zero is not the right value, since that's
 //   a perfectly valid place to map a page.)
-int32_t
-ipc_recv(envid_t *from_env_store, void *pg, int *perm_store) {
+int32_t ipc_recv(envid_t *from_env_store, void *pg, int *perm_store) {
   // LAB 9 code
   int r;
 
@@ -57,8 +56,7 @@ ipc_recv(envid_t *from_env_store, void *pg, int *perm_store) {
 //   Use sys_yield() to be CPU-friendly.
 //   If 'pg' is null, pass sys_ipc_recv a value that it will understand
 //   as meaning "no page".  (Zero is not the right value.)
-void
-ipc_send(envid_t to_env, uint32_t val, void *pg, int perm) {
+void ipc_send(envid_t to_env, uint32_t val, void *pg, int perm) {
   // LAB 9 code
   int r;
 
@@ -78,8 +76,7 @@ ipc_send(envid_t to_env, uint32_t val, void *pg, int perm) {
 // Find the first environment of the given type.  We'll use this to
 // find special environments.
 // Returns 0 if no such environment exists.
-envid_t
-ipc_find_env(enum EnvType type) {
+envid_t ipc_find_env(enum EnvType type) {
   int i;
   for (i = 0; i < NENV; i++)
     if (envs[i].env_type == type)

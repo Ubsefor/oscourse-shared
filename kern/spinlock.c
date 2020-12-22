@@ -1,13 +1,13 @@
 // Mutual exclusion spin locks.
 
-#include <inc/types.h>
 #include <inc/assert.h>
-#include <inc/x86.h>
 #include <inc/memlayout.h>
 #include <inc/string.h>
+#include <inc/types.h>
+#include <inc/x86.h>
 #include <kern/cpu.h>
-#include <kern/spinlock.h>
 #include <kern/kdebug.h>
+#include <kern/spinlock.h>
 
 // The big kernel lock
 struct spinlock kernel_lock = {
@@ -18,8 +18,7 @@ struct spinlock kernel_lock = {
 
 #ifdef DEBUG_SPINLOCK
 // Record the current call stack in pcs[] by following the %rbp chain.
-static void
-get_caller_pcs(uint64_t pcs[]) {
+static void get_caller_pcs(uint64_t pcs[]) {
   uint64_t *rbp;
   int i;
 
@@ -27,22 +26,18 @@ get_caller_pcs(uint64_t pcs[]) {
   for (i = 0; i < 10; i++) {
     if (rbp == 0 || rbp < (uint64_t *)ULIM)
       break;
-    pcs[i] = rbp[1];             // saved %eip
-    rbp    = (uint64_t *)rbp[0]; // saved %rbp
+    pcs[i] = rbp[1];          // saved %eip
+    rbp = (uint64_t *)rbp[0]; // saved %rbp
   }
   for (; i < 10; i++)
     pcs[i] = 0;
 }
 
 // Check whether this CPU is holding the lock.
-static int
-holding(struct spinlock *lock) {
-  return lock->locked;
-}
+static int holding(struct spinlock *lock) { return lock->locked; }
 #endif
 
-void
-__spin_initlock(struct spinlock *lk, char *name) {
+void __spin_initlock(struct spinlock *lk, char *name) {
   lk->locked = 0;
 #ifdef DEBUG_SPINLOCK
   lk->name = name;
@@ -53,8 +48,7 @@ __spin_initlock(struct spinlock *lk, char *name) {
 // Loops (spins) until the lock is acquired.
 // Holding a lock for a long time may cause
 // other CPUs to waste time spinning to acquire it.
-void
-spin_lock(struct spinlock *lk) {
+void spin_lock(struct spinlock *lk) {
 #ifdef DEBUG_SPINLOCK
   if (holding(lk))
     panic("Cannot acquire %s: already holding", lk->name);
@@ -73,8 +67,7 @@ spin_lock(struct spinlock *lk) {
 }
 
 // Release the lock.
-void
-spin_unlock(struct spinlock *lk) {
+void spin_unlock(struct spinlock *lk) {
 #ifdef DEBUG_SPINLOCK
   if (!holding(lk)) {
     int i;
@@ -85,9 +78,8 @@ spin_unlock(struct spinlock *lk) {
     for (i = 0; i < 10 && pcs[i]; i++) {
       struct Ripdebuginfo info;
       if (debuginfo_rip(pcs[i], &info) >= 0)
-        cprintf("  %08x %s:%d: %.*s+%lx\n", pcs[i],
-                info.rip_file, info.rip_line,
-                info.rip_fn_namelen, info.rip_fn_name,
+        cprintf("  %08x %s:%d: %.*s+%lx\n", pcs[i], info.rip_file,
+                info.rip_line, info.rip_fn_namelen, info.rip_fn_name,
                 pcs[i] - info.rip_fn_addr);
       else
         cprintf("  %08x\n", pcs[i]);

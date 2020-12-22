@@ -3,8 +3,7 @@
 
 #include <inc/lib.h>
 
-void
-umain(int argc, char **argv) {
+void umain(int argc, char **argv) {
   envid_t who;
 
   if ((who = fork()) != 0) {

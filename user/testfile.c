@@ -4,8 +4,7 @@ const char *msg = "This is the NEW message of the day!\n\n";
 
 #define FVA ((struct Fd *)0xA000000)
 
-static int
-xopen(const char *path, int mode) {
+static int xopen(const char *path, int mode) {
   extern union Fsipc fsipcbuf;
   envid_t fsenv;
 
@@ -17,8 +16,7 @@ xopen(const char *path, int mode) {
   return ipc_recv(NULL, FVA, NULL);
 }
 
-void
-umain(int argc, char **argv) {
+void umain(int argc, char **argv) {
   int64_t r, f, i;
   struct Fd *fd;
   struct Fd fdcopy;
@@ -40,7 +38,8 @@ umain(int argc, char **argv) {
   if ((r = devfile.dev_stat(FVA, &st)) < 0)
     panic("file_stat: %ld", (long)r);
   if (strlen(msg) != st.st_size)
-    panic("file_stat returned size %ld wanted %d\n", (long)st.st_size, strlen(msg));
+    panic("file_stat returned size %ld wanted %d\n", (long)st.st_size,
+          strlen(msg));
   cprintf("file_stat is good\n");
 
   memset(buf, 0, sizeof buf);
@@ -114,11 +113,10 @@ umain(int argc, char **argv) {
     if ((r = readn(f, buf, sizeof(buf))) < 0)
       panic("read /big@%ld: %ld", (long)i, (long)r);
     if (r != sizeof(buf))
-      panic("read /big from %ld returned %ld < %d bytes",
-            (long)i, (long)r, (uint32_t)sizeof(buf));
+      panic("read /big from %ld returned %ld < %d bytes", (long)i, (long)r,
+            (uint32_t)sizeof(buf));
     if (*(int *)buf != i)
-      panic("read /big from %ld returned bad data %d",
-            (long)i, *(int *)buf);
+      panic("read /big from %ld returned bad data %d", (long)i, *(int *)buf);
   }
   close(f);
   cprintf("large file is good\n");

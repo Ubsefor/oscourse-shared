@@ -13,10 +13,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 #undef off_t
 #undef bool
 
@@ -28,11 +28,11 @@ typedef uint32_t physaddr_t;
 typedef uint32_t off_t;
 typedef int bool;
 
-#include <inc/mmu.h>
 #include <inc/fs.h>
+#include <inc/mmu.h>
 
 #define ROUNDUP(n, v) ((n)-1 + (v) - ((n)-1) % (v))
-#define MAX_DIR_ENTS  128
+#define MAX_DIR_ENTS 128
 
 struct Dir {
   struct File *f;
@@ -45,8 +45,7 @@ char *diskmap, *diskpos;
 struct Super *super;
 uint32_t *bitmap;
 
-void
-panic(const char *fmt, ...) {
+void panic(const char *fmt, ...) {
   va_list ap;
 
   va_start(ap, fmt);
@@ -56,8 +55,7 @@ panic(const char *fmt, ...) {
   abort();
 }
 
-void
-readn(int f, void *out, size_t n) {
+void readn(int f, void *out, size_t n) {
   size_t p = 0;
   while (p < n) {
     int m = read(f, out + p, n - p);
@@ -69,13 +67,9 @@ readn(int f, void *out, size_t n) {
   }
 }
 
-uint32_t
-blockof(void *pos) {
-  return ((char *)pos - diskmap) / BLKSIZE;
-}
+uint32_t blockof(void *pos) { return ((char *)pos - diskmap) / BLKSIZE; }
 
-void *
-alloc(uint32_t bytes) {
+void *alloc(uint32_t bytes) {
   void *start = diskpos;
   diskpos += ROUNDUP(bytes, BLKSIZE);
   if (blockof(diskpos) >= nblocks)
@@ -83,14 +77,14 @@ alloc(uint32_t bytes) {
   return start;
 }
 
-void
-opendisk(const char *name) {
+void opendisk(const char *name) {
   int r, diskfd, nbitblocks;
 
   if ((diskfd = open(name, O_RDWR | O_CREAT, 0666)) < 0)
     panic("open %s: %s", name, strerror(errno));
 
-  if ((r = ftruncate(diskfd, 0)) < 0 || (r = ftruncate(diskfd, nblocks * BLKSIZE)) < 0)
+  if ((r = ftruncate(diskfd, 0)) < 0 ||
+      (r = ftruncate(diskfd, nblocks * BLKSIZE)) < 0)
     panic("truncate %s: %s", name, strerror(errno));
 
   if ((diskmap = mmap(NULL, nblocks * BLKSIZE, PROT_READ | PROT_WRITE,
@@ -101,19 +95,18 @@ opendisk(const char *name) {
 
   diskpos = diskmap;
   alloc(BLKSIZE);
-  super                = alloc(BLKSIZE);
-  super->s_magic       = FS_MAGIC;
-  super->s_nblocks     = nblocks;
+  super = alloc(BLKSIZE);
+  super->s_magic = FS_MAGIC;
+  super->s_nblocks = nblocks;
   super->s_root.f_type = FTYPE_DIR;
   strcpy(super->s_root.f_name, "/");
 
   nbitblocks = (nblocks + BLKBITSIZE - 1) / BLKBITSIZE;
-  bitmap     = alloc(nbitblocks * BLKSIZE);
+  bitmap = alloc(nbitblocks * BLKSIZE);
   memset(bitmap, 0xFF, nbitblocks * BLKSIZE);
 }
 
-void
-finishdisk(void) {
+void finishdisk(void) {
   int r, i;
 
   for (i = 0; i < blockof(diskpos); ++i)
@@ -123,11 +116,10 @@ finishdisk(void) {
     panic("msync: %s", strerror(errno));
 }
 
-void
-finishfile(struct File *f, uint32_t start, uint32_t len) {
+void finishfile(struct File *f, uint32_t start, uint32_t len) {
   int i;
   f->f_size = len;
-  len       = ROUNDUP(len, BLKSIZE);
+  len = ROUNDUP(len, BLKSIZE);
   for (i = 0; i < len / BLKSIZE && i < NDIRECT; ++i)
     f->f_direct[i] = start + i;
   if (i == NDIRECT) {
@@ -138,15 +130,13 @@ finishfile(struct File *f, uint32_t start, uint32_t len) {
   }
 }
 
-void
-startdir(struct File *f, struct Dir *dout) {
-  dout->f    = f;
+void startdir(struct File *f, struct Dir *dout) {
+  dout->f = f;
   dout->ents = malloc(MAX_DIR_ENTS * sizeof *dout->ents);
-  dout->n    = 0;
+  dout->n = 0;
 }
 
-struct File *
-diradd(struct Dir *d, uint32_t type, const char *name) {
+struct File *diradd(struct Dir *d, uint32_t type, const char *name) {
   struct File *out = &d->ents[d->n++];
   if (d->n > MAX_DIR_ENTS)
     panic("too many directory entries");
@@ -155,9 +145,8 @@ diradd(struct Dir *d, uint32_t type, const char *name) {
   return out;
 }
 
-void
-finishdir(struct Dir *d) {
-  int size           = d->n * sizeof(struct File);
+void finishdir(struct Dir *d) {
+  int size = d->n * sizeof(struct File);
   struct File *start = alloc(size);
   memmove(start, d->ents, size);
   finishfile(d->f, blockof(start), ROUNDUP(size, BLKSIZE));
@@ -165,8 +154,7 @@ finishdir(struct Dir *d) {
   d->ents = NULL;
 }
 
-void
-writefile(struct Dir *dir, const char *name) {
+void writefile(struct Dir *dir, const char *name) {
   int r, fd;
   struct File *f;
   struct stat st;
@@ -188,21 +176,19 @@ writefile(struct Dir *dir, const char *name) {
   else
     last = name;
 
-  f     = diradd(dir, FTYPE_REG, last);
+  f = diradd(dir, FTYPE_REG, last);
   start = alloc(st.st_size);
   readn(fd, start, st.st_size);
   finishfile(f, blockof(start), st.st_size);
   close(fd);
 }
 
-void
-usage(void) {
+void usage(void) {
   fprintf(stderr, "Usage: fsformat fs.img NBLOCKS files...\n");
   exit(2);
 }
 
-int
-main(int argc, char **argv) {
+int main(int argc, char **argv) {
   int i;
   char *s;
   struct Dir root;

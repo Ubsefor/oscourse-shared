@@ -1,7 +1,7 @@
 // implement fork from user space
 
-#include <inc/string.h>
 #include <inc/lib.h>
+#include <inc/string.h>
 
 // PTE_COW marks copy-on-write page table entries.
 // It is one of the bits explicitly allocated to user processes (PTE_AVAIL).
@@ -16,8 +16,7 @@ extern void _pgfault_upcall(void);
 #ifdef SANITIZE_USER_SHADOW_BASE
 void *__nosan_memcpy(void *dst, const void *src, size_t sz);
 #endif
-static void
-pgfault(struct UTrapframe *utf) {
+static void pgfault(struct UTrapframe *utf) {
   // Check that the faulting access was (1) a write, and (2) to a
   // copy-on-write page.  If not, panic.
   // Hint:
@@ -25,12 +24,13 @@ pgfault(struct UTrapframe *utf) {
   //   (see <inc/memlayout.h>).
 
   // LAB 9 code
-  void *addr   = (void *)utf->utf_fault_va;
+  void *addr = (void *)utf->utf_fault_va;
   uint64_t err = utf->utf_err;
   int r;
 
   if (!((err & FEC_WR) && (uvpt[PGNUM(addr)] & PTE_COW))) {
-    panic("Not a WR or not a COW page! va: %lx err: %lx\n", (uint64_t)addr, err);
+    panic("Not a WR or not a COW page! va: %lx err: %lx\n", (uint64_t)addr,
+          err);
   }
   // LAB 9 code end
 
@@ -40,7 +40,8 @@ pgfault(struct UTrapframe *utf) {
   // Hint:
   //   You should make three system calls.
   //   No need to explicitly delete the old page's mapping.
-  //   Make sure you DO NOT use sanitized memcpy/memset routines when using UASAN.
+  //   Make sure you DO NOT use sanitized memcpy/memset routines when using
+  //   UASAN.
 
   // LAB 9 code
   if ((r = sys_page_alloc(0, (void *)PFTEMP, PTE_W | PTE_U | PTE_P)) < 0) {
@@ -53,7 +54,8 @@ pgfault(struct UTrapframe *utf) {
   memmove((void *)PFTEMP, ROUNDDOWN(addr, PGSIZE), PGSIZE);
 #endif
 
-  if ((r = sys_page_map(0, (void *)PFTEMP, 0, ROUNDDOWN(addr, PGSIZE), PTE_W | PTE_U | PTE_P)) < 0) {
+  if ((r = sys_page_map(0, (void *)PFTEMP, 0, ROUNDDOWN(addr, PGSIZE),
+                        PTE_W | PTE_U | PTE_P)) < 0) {
     panic("pgfault error: sys_page_map: %i\n", r);
   }
 
@@ -74,8 +76,7 @@ pgfault(struct UTrapframe *utf) {
 // Returns: 0 on success, < 0 on error.
 // It is also OK to panic on error.
 //
-static int
-duppage(envid_t envid, uintptr_t pn) {
+static int duppage(envid_t envid, uintptr_t pn) {
 
   // LAB 9 code
   pte_t ent = uvpt[pn] & PTE_SYSCALL;
@@ -84,20 +85,23 @@ duppage(envid_t envid, uintptr_t pn) {
 
   // LAB 11 code
   if (uvpt[pn] & PTE_SHARE) {
-    if ((r = sys_page_map(id, (void *)(pn * PGSIZE), envid, (void *)(pn * PGSIZE), ent)) < 0) {
+    if ((r = sys_page_map(id, (void *)(pn * PGSIZE), envid,
+                          (void *)(pn * PGSIZE), ent)) < 0) {
       panic("duppage error: sys_page_map PTE_SHARE: %i\n", r);
     }
     // LAB 11 code end
   } else if (ent & (PTE_W | PTE_COW)) {
     ent = (ent | PTE_COW) & ~PTE_W;
-    r   = sys_page_map(id, (void *)(pn * PGSIZE), envid, (void *)(pn * PGSIZE), ent);
+    r = sys_page_map(id, (void *)(pn * PGSIZE), envid, (void *)(pn * PGSIZE),
+                     ent);
 
     if (r < 0) {
       return r;
     }
     r = sys_page_map(id, (void *)(pn * PGSIZE), id, (void *)(pn * PGSIZE), ent);
   } else {
-    r = sys_page_map(id, (void *)(pn * PGSIZE), envid, (void *)(pn * PGSIZE), ent);
+    r = sys_page_map(id, (void *)(pn * PGSIZE), envid, (void *)(pn * PGSIZE),
+                     ent);
   }
 
   return r;
@@ -122,9 +126,9 @@ duppage(envid_t envid, uintptr_t pn) {
 //   Neither user exception stack should ever be marked copy-on-write,
 //   so you must allocate a new page for the child's user exception stack.
 //
-envid_t
-fork(void) {
-  // Duplicating shadow addresses is insane. Make sure to skip shadow addresses in COW above.
+envid_t fork(void) {
+  // Duplicating shadow addresses is insane. Make sure to skip shadow addresses
+  // in COW above.
 
   // LAB 9 code
   envid_t e;
@@ -142,26 +146,37 @@ fork(void) {
   } else {
     uint64_t i;
     for (i = 0; i < UTOP / PGSIZE; i++) {
-      if ((uvpml4e[VPML4E(i * PGSIZE)] & PTE_P) && (uvpde[VPDPE(i * PGSIZE)] & PTE_P) && (uvpd[VPD(i * PGSIZE)] & PTE_P)) {
+      if ((uvpml4e[VPML4E(i * PGSIZE)] & PTE_P) &&
+          (uvpde[VPDPE(i * PGSIZE)] & PTE_P) &&
+          (uvpd[VPD(i * PGSIZE)] & PTE_P)) {
         void *addr = (void *)(i * PGSIZE);
 
 #ifdef SANITIZE_USER_SHADOW_BASE
         uintptr_t p = (uintptr_t)addr;
-        if ((p >= SANITIZE_USER_SHADOW_BASE) && (p < SANITIZE_USER_SHADOW_BASE + SANITIZE_USER_SHADOW_SIZE)) {
+        if ((p >= SANITIZE_USER_SHADOW_BASE) &&
+            (p < SANITIZE_USER_SHADOW_BASE + SANITIZE_USER_SHADOW_SIZE)) {
           continue;
         }
-        if ((p >= SANITIZE_USER_EXTRA_SHADOW_BASE) && (p < SANITIZE_USER_EXTRA_SHADOW_BASE + SANITIZE_USER_EXTRA_SHADOW_SIZE)) {
+        if ((p >= SANITIZE_USER_EXTRA_SHADOW_BASE) &&
+            (p < SANITIZE_USER_EXTRA_SHADOW_BASE +
+                     SANITIZE_USER_EXTRA_SHADOW_SIZE)) {
           continue;
         }
-        if ((p >= SANITIZE_USER_STACK_SHADOW_BASE) && (p < SANITIZE_USER_STACK_SHADOW_BASE + SANITIZE_USER_STACK_SHADOW_SIZE)) {
+        if ((p >= SANITIZE_USER_STACK_SHADOW_BASE) &&
+            (p < SANITIZE_USER_STACK_SHADOW_BASE +
+                     SANITIZE_USER_STACK_SHADOW_SIZE)) {
           continue;
         }
-        if ((p >= SANITIZE_USER_VPT_SHADOW_BASE) && (p < SANITIZE_USER_VPT_SHADOW_BASE + SANITIZE_USER_VPT_SHADOW_SIZE)) {
+        if ((p >= SANITIZE_USER_VPT_SHADOW_BASE) &&
+            (p <
+             SANITIZE_USER_VPT_SHADOW_BASE + SANITIZE_USER_VPT_SHADOW_SIZE)) {
           continue;
         }
 #endif
 
-        if (((uintptr_t)addr < UTOP) && ((uintptr_t)addr != UXSTACKTOP - PGSIZE) && (uvpt[PGNUM(addr)] & PTE_P)) {
+        if (((uintptr_t)addr < UTOP) &&
+            ((uintptr_t)addr != UXSTACKTOP - PGSIZE) &&
+            (uvpt[PGNUM(addr)] & PTE_P)) {
           // cprintf("FORK addr %lx\n", (uint64_t)addr);
           // cprintf("PTE_W %ld\n", uvpt[PGNUM(addr)] & PTE_W);
           // cprintf("PTE_U %ld\n", uvpt[PGNUM(addr)] & PTE_U);
@@ -183,16 +198,26 @@ fork(void) {
 
 #ifdef SANITIZE_USER_SHADOW_BASE
     uintptr_t addr;
-    for (addr = SANITIZE_USER_SHADOW_BASE; addr < SANITIZE_USER_SHADOW_BASE + SANITIZE_USER_SHADOW_SIZE; addr += PGSIZE)
+    for (addr = SANITIZE_USER_SHADOW_BASE;
+         addr < SANITIZE_USER_SHADOW_BASE + SANITIZE_USER_SHADOW_SIZE;
+         addr += PGSIZE)
       if ((r = sys_page_alloc(e, (void *)addr, PTE_P | PTE_U | PTE_W)) < 0)
         panic("Fork: failed to alloc shadow base page: %i\n", r);
-    for (addr = SANITIZE_USER_EXTRA_SHADOW_BASE; addr < SANITIZE_USER_EXTRA_SHADOW_BASE + SANITIZE_USER_EXTRA_SHADOW_SIZE; addr += PGSIZE)
+    for (addr = SANITIZE_USER_EXTRA_SHADOW_BASE;
+         addr <
+         SANITIZE_USER_EXTRA_SHADOW_BASE + SANITIZE_USER_EXTRA_SHADOW_SIZE;
+         addr += PGSIZE)
       if ((r = sys_page_alloc(e, (void *)addr, PTE_P | PTE_U | PTE_W)) < 0)
         panic("Fork: failed to alloc shadow extra base page: %i\n", r);
-    for (addr = SANITIZE_USER_STACK_SHADOW_BASE; addr < SANITIZE_USER_STACK_SHADOW_BASE + SANITIZE_USER_STACK_SHADOW_SIZE; addr += PGSIZE)
+    for (addr = SANITIZE_USER_STACK_SHADOW_BASE;
+         addr <
+         SANITIZE_USER_STACK_SHADOW_BASE + SANITIZE_USER_STACK_SHADOW_SIZE;
+         addr += PGSIZE)
       if ((r = sys_page_alloc(e, (void *)addr, PTE_P | PTE_U | PTE_W)) < 0)
         panic("Fork: failed to alloc shadow stack base page: %i\n", r);
-    for (addr = SANITIZE_USER_VPT_SHADOW_BASE; addr < SANITIZE_USER_VPT_SHADOW_BASE + SANITIZE_USER_VPT_SHADOW_SIZE; addr += PGSIZE)
+    for (addr = SANITIZE_USER_VPT_SHADOW_BASE;
+         addr < SANITIZE_USER_VPT_SHADOW_BASE + SANITIZE_USER_VPT_SHADOW_SIZE;
+         addr += PGSIZE)
       if ((r = sys_page_alloc(e, (void *)addr, PTE_P | PTE_U | PTE_W)) < 0)
         panic("Fork: failed to alloc shadow vpt base page: %i\n", r);
 #endif
@@ -207,8 +232,7 @@ fork(void) {
 }
 
 // Challenge!
-int
-sfork(void) {
+int sfork(void) {
   panic("sfork not implemented");
   return -E_INVAL;
 }

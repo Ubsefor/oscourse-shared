@@ -263,11 +263,10 @@ mem_init(void) {
   // LAB 8 code
   envs = (struct Env *)boot_alloc(sizeof(*envs) * NENV);
   memset(envs, 0, sizeof(*envs) * NENV);
-  // LAB 8 code end
 
   //////////////////////////////////////////////////////////////////////
   // Make 'vsys' point to an array of size 'NVSYSCALLS' of int.
-  // LAB 12 code
+  // LAB 12: Your code here.
   vsys = (int *)boot_alloc(sizeof(*vsys) * NVSYSCALLS);
   memset((int *)vsys, 0, sizeof(*vsys) * NVSYSCALLS);
   // LAB 12 code end
@@ -296,7 +295,6 @@ mem_init(void) {
 
   // LAB 7 code
   boot_map_region(kern_pml4e, UPAGES, ROUNDUP(npages * sizeof(*pages), PGSIZE), PADDR(pages), PTE_U | PTE_P);
-  // LAB 7 code end
 
   //////////////////////////////////////////////////////////////////////
   // Map the 'envs' array read-only by the user at linear address UENVS
@@ -307,7 +305,6 @@ mem_init(void) {
 
   // LAB 8 code
   boot_map_region(kern_pml4e, UENVS, ROUNDUP(NENV * sizeof(*envs), PGSIZE), PADDR(envs), PTE_U | PTE_P);
-  // LAB 8 code end
 
   //////////////////////////////////////////////////////////////////////
   // Map the 'vsys' array read-only by the user at linear address UVSYS
@@ -315,8 +312,10 @@ mem_init(void) {
   // Permissions:
   //    - the new image at UVSYS  -- kernel R, user R
   //    - envs itself -- kernel RW, user NONE
-  // LAB 12 code
-  boot_map_region(kern_pml4e, UVSYS, ROUNDUP(sizeof(*vsys) * NVSYSCALLS, PGSIZE), PADDR((int *)vsys), PTE_U | PTE_P);
+  // LAB 12: Your code here.
+  boot_map_region(kern_pml4e, UVSYS,
+                  ROUNDUP(sizeof(*vsys) * NVSYSCALLS, PGSIZE),
+                  PADDR((int *)vsys), PTE_U | PTE_P);
   // LAB 12 code end
 
   //////////////////////////////////////////////////////////////////////
@@ -332,7 +331,6 @@ mem_init(void) {
 
   // LAB 7 code
   boot_map_region(kern_pml4e, KSTACKTOP - KSTKSIZE, KSTACKTOP - (KSTACKTOP - KSTKSIZE), PADDR(bootstack), PTE_W | PTE_P);
-  // LAB 7 code end
 
   // Additionally map stack to lower 32-bit addresses.
   boot_map_region(kern_pml4e, X86ADDR(KSTACKTOP - KSTKSIZE), KSTKSIZE, PADDR(bootstack), PTE_P | PTE_W);
@@ -347,7 +345,6 @@ mem_init(void) {
 
   // LAB 7 code
   boot_map_region(kern_pml4e, KERNBASE, npages * PGSIZE, 0, PTE_W | PTE_P);
-  // LAB 7 code end
 
   // Additionally map kernel to lower 32-bit addresses. Assumes kernel should not exceed 50 mb.
   size_to_alloc = MIN(0x3200000, npages * PGSIZE);
@@ -639,9 +636,6 @@ pml4e_walk(pml4e_t *pml4e, const void *va, int create) {
     }
   }
   return NULL;
-  // LAB 7 code end
-
-  //return NULL;
 }
 
 pte_t *
@@ -660,9 +654,6 @@ pdpe_walk(pdpe_t *pdpe, const void *va, int create) {
     }
   }
   return NULL;
-  // LAB 7 code end
-
-  //return NULL;
 }
 
 pte_t *
@@ -681,9 +672,6 @@ pgdir_walk(pde_t *pgdir, const void *va, int create) {
     }
   }
   return NULL;
-  // LAB 7 code end
-
-  //return NULL;
 }
 
 //
@@ -704,7 +692,6 @@ boot_map_region(pml4e_t *pml4e, uintptr_t va, size_t size, physaddr_t pa, int pe
   for (i = 0; i < size; i += PGSIZE) {
     *pml4e_walk(pml4e, (void *)(va + i), 1) = (pa + i) | perm | PTE_P;
   }
-  // LAB 7 code end
 }
 
 //
@@ -805,6 +792,17 @@ page_lookup(pml4e_t *pml4e, void *va, pte_t **pte_store) {
 void
 page_remove(pml4e_t *pml4e, void *va) {
   // LAB 7 code
+  /*
+  pte_t *ptep;
+  struct PageInfo *pp;
+
+  pp = page_lookup(pml4e, va, &ptep);
+  if (pp) {
+    page_decref(pp);
+    *ptep = 0;
+    tlb_invalidate(pml4e, va);
+  }
+  */
   pte_t *ent = pml4e_walk(pml4e, va, 0);
   if (!ent)
     return;
@@ -814,6 +812,7 @@ page_remove(pml4e_t *pml4e, void *va) {
   *ent = 0;
 
   tlb_invalidate(pml4e, va);
+
   // LAB 7 code end
 }
 
@@ -927,7 +926,6 @@ user_mem_check(struct Env *env, const void *va, size_t len, int perm) {
     user_mem_check_addr = MAX(ULIM, (uintptr_t)va2);
     return -E_FAULT;
   }
-  // LAB 8 code end
 
   return 0;
 }

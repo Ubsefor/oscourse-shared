@@ -12,8 +12,7 @@ const char *binaryname = "<unknown>";
 void (*volatile sys_exit)(void);
 #endif
 
-void
-libmain(int argc, char **argv) {
+void libmain(int argc, char **argv) {
   // Perform global constructor initialisation (e.g. asan)
   // This must be done as early as possible
   extern void (*__ctors_start)();

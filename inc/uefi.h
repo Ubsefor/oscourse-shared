@@ -28,9 +28,10 @@ typedef struct {
   ///
   UINT32 Type;
   ///
-  /// Physical address of the first byte in the memory region. PhysicalStart must be
-  /// aligned on a 4 KiB boundary, and must not be above 0xfffffffffffff000. Type
-  /// EFI_PHYSICAL_ADDRESS is defined in the AllocatePages() function description
+  /// Physical address of the first byte in the memory region. PhysicalStart
+  /// must be aligned on a 4 KiB boundary, and must not be above
+  /// 0xfffffffffffff000. Type EFI_PHYSICAL_ADDRESS is defined in the
+  /// AllocatePages() function description
   ///
   EFI_PHYSICAL_ADDRESS PhysicalStart;
   ///
@@ -89,48 +90,50 @@ typedef struct {
 
 extern LOADER_PARAMS *uefi_lp;
 
-int efi_call_in_32bit_mode(uint32_t func,
-                           efi_registers *efi_reg,
+int efi_call_in_32bit_mode(uint32_t func, efi_registers *efi_reg,
                            void *stack_contents,
                            size_t stack_contents_size, /* 16-byte multiple */
                            uint32_t *efi_status);
 
 /* Attribute values */
-#define EFI_MEMORY_UC  ((UINT64)0x0000000000000001ULL) /* uncached */
-#define EFI_MEMORY_WC  ((UINT64)0x0000000000000002ULL) /* write-coalescing */
-#define EFI_MEMORY_WT  ((UINT64)0x0000000000000004ULL) /* write-through */
-#define EFI_MEMORY_WB  ((UINT64)0x0000000000000008ULL) /* write-back */
-#define EFI_MEMORY_UCE ((UINT64)0x0000000000000010ULL) /* uncached, exported */
-#define EFI_MEMORY_WP  ((UINT64)0x0000000000001000ULL) /* write-protect */
-#define EFI_MEMORY_RP  ((UINT64)0x0000000000002000ULL) /* read-protect */
-#define EFI_MEMORY_XP  ((UINT64)0x0000000000004000ULL) /* execute-protect */
-#define EFI_MEMORY_NV  ((UINT64)0x0000000000008000ULL) /* non-volatile */
-#define EFI_MEMORY_MORE_RELIABLE \
-  ((UINT64)0x0000000000010000ULL)                            /* higher reliability */
-#define EFI_MEMORY_RO        ((UINT64)0x0000000000020000ULL) /* read-only */
-#define EFI_MEMORY_RUNTIME   ((UINT64)0x8000000000000000ULL) /* range requires runtime mapping */
+#define EFI_MEMORY_UC ((UINT64)0x0000000000000001ULL) /* uncached */
+#define EFI_MEMORY_WC ((UINT64)0x0000000000000002ULL) /* write-coalescing */
+#define EFI_MEMORY_WT ((UINT64)0x0000000000000004ULL) /* write-through */
+#define EFI_MEMORY_WB ((UINT64)0x0000000000000008ULL) /* write-back */
+#define EFI_MEMORY_UCE                                                         \
+  ((UINT64)0x0000000000000010ULL)                     /* uncached, exported    \
+                                                       */
+#define EFI_MEMORY_WP ((UINT64)0x0000000000001000ULL) /* write-protect */
+#define EFI_MEMORY_RP ((UINT64)0x0000000000002000ULL) /* read-protect */
+#define EFI_MEMORY_XP ((UINT64)0x0000000000004000ULL) /* execute-protect */
+#define EFI_MEMORY_NV ((UINT64)0x0000000000008000ULL) /* non-volatile */
+#define EFI_MEMORY_MORE_RELIABLE                                               \
+  ((UINT64)0x0000000000010000ULL)                     /* higher reliability */
+#define EFI_MEMORY_RO ((UINT64)0x0000000000020000ULL) /* read-only */
+#define EFI_MEMORY_RUNTIME                                                     \
+  ((UINT64)0x8000000000000000ULL) /* range requires runtime mapping */
 #define EFI_MEM_DESC_VERSION 1
 
 #define EFI_PAGE_SHIFT 12
-#define EFI_PAGE_SIZE  (1ULL << EFI_PAGE_SHIFT)
-#define EFI_PAGE_MASK  (EFI_PAGE_SIZE - 1)
+#define EFI_PAGE_SIZE (1ULL << EFI_PAGE_SHIFT)
+#define EFI_PAGE_MASK (EFI_PAGE_SIZE - 1)
 
 /* Memory types: */
-#define EFI_RESERVED_TYPE               0
-#define EFI_LOADER_CODE                 1
-#define EFI_LOADER_DATA                 2
-#define EFI_BOOT_SERVICES_CODE          3
-#define EFI_BOOT_SERVICES_DATA          4
-#define EFI_RUNTIME_SERVICES_CODE       5
-#define EFI_RUNTIME_SERVICES_DATA       6
-#define EFI_CONVENTIONAL_MEMORY         7
-#define EFI_UNUSABLE_MEMORY             8
-#define EFI_ACPI_RECLAIM_MEMORY         9
-#define EFI_ACPI_MEMORY_NVS             10
-#define EFI_MEMORY_MAPPED_IO            11
+#define EFI_RESERVED_TYPE 0
+#define EFI_LOADER_CODE 1
+#define EFI_LOADER_DATA 2
+#define EFI_BOOT_SERVICES_CODE 3
+#define EFI_BOOT_SERVICES_DATA 4
+#define EFI_RUNTIME_SERVICES_CODE 5
+#define EFI_RUNTIME_SERVICES_DATA 6
+#define EFI_CONVENTIONAL_MEMORY 7
+#define EFI_UNUSABLE_MEMORY 8
+#define EFI_ACPI_RECLAIM_MEMORY 9
+#define EFI_ACPI_MEMORY_NVS 10
+#define EFI_MEMORY_MAPPED_IO 11
 #define EFI_MEMORY_MAPPED_IO_PORT_SPACE 12
-#define EFI_PAL_CODE                    13
-#define EFI_PERSISTENT_MEMORY           14
-#define EFI_MAX_MEMORY_TYPE             15
+#define EFI_PAL_CODE 13
+#define EFI_PERSISTENT_MEMORY 14
+#define EFI_MAX_MEMORY_TYPE 15
 
-#endif //JOS_INC_UEFI_H
+#endif // JOS_INC_UEFI_H

@@ -5,8 +5,7 @@
 
 uint32_t val;
 
-void
-umain(int argc, char **argv) {
+void umain(int argc, char **argv) {
   envid_t who;
   uint32_t i;
 
@@ -20,7 +19,8 @@ umain(int argc, char **argv) {
 
   while (1) {
     ipc_recv(&who, 0, 0);
-    cprintf("%x got %d from %x (thisenv is %p %x)\n", sys_getenvid(), val, who, thisenv, thisenv->env_id);
+    cprintf("%x got %d from %x (thisenv is %p %x)\n", sys_getenvid(), val, who,
+            thisenv, thisenv->env_id);
     if (val == 10)
       return;
     ++val;

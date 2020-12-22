@@ -1,12 +1,11 @@
-#include <inc/stdio.h>
 #include <inc/error.h>
+#include <inc/stdio.h>
 #include <inc/string.h>
 
 #define BUFLEN 1024
 static char buf[BUFLEN];
 
-char *
-readline(const char *prompt) {
+char *readline(const char *prompt) {
   int i, c, echoing;
 
   if (prompt != NULL) {
@@ -17,7 +16,7 @@ readline(const char *prompt) {
 #endif
   }
 
-  i       = 0;
+  i = 0;
   echoing = iscons(0);
   while (1) {
     c = getchar();

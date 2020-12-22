@@ -20,8 +20,7 @@
 /* Not sanitised functions needed for asan itself
  */
 
-void *
-__nosan_memset(void *src, int c, size_t sz) {
+void *__nosan_memset(void *src, int c, size_t sz) {
   // We absolutely must implement this for ASAN functioning.
   volatile char *vptr = (volatile char *)(src);
   while (sz--) {
@@ -30,8 +29,7 @@ __nosan_memset(void *src, int c, size_t sz) {
   return src;
 }
 
-void *
-__nosan_memcpy(void *dst, const void *src, size_t sz) {
+void *__nosan_memcpy(void *dst, const void *src, size_t sz) {
   uint8_t *d = (uint8_t *)dst;
   uint8_t *s = (uint8_t *)src;
 

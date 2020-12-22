@@ -15,8 +15,7 @@ int gettoken(char *s, char **token);
 // runcmd() is called in a forked child,
 // so it's OK to manipulate file descriptor state.
 #define MAXARGS 16
-void
-runcmd(char *s) {
+void runcmd(char *s) {
   char *argv[MAXARGS], *t, argv0buf[BUFSIZ];
   int argc, c, i, r, p[2], fd, pipe_child;
 
@@ -28,93 +27,93 @@ again:
   while (1) {
     switch ((c = gettoken(0, &t))) {
 
-      case 'w': // Add an argument
-        if (argc == MAXARGS) {
-          cprintf("too many arguments\n");
-          exit();
-        }
-        argv[argc++] = t;
-        break;
+    case 'w': // Add an argument
+      if (argc == MAXARGS) {
+        cprintf("too many arguments\n");
+        exit();
+      }
+      argv[argc++] = t;
+      break;
 
-      case '<': // Input redirection
-        // Grab the filename from the argument list
-        if (gettoken(0, &t) != 'w') {
-          cprintf("syntax error: < not followed by word\n");
-          exit();
-        }
-        // Open 't' for reading as file descriptor 0
-        // (which environments use as standard input).
-        // We can't open a file onto a particular descriptor,
-        // so open the file as 'fd',
-        // then check whether 'fd' is 0.
-        // If not, dup 'fd' onto file descriptor 0,
-        // then close the original 'fd'.
+    case '<': // Input redirection
+      // Grab the filename from the argument list
+      if (gettoken(0, &t) != 'w') {
+        cprintf("syntax error: < not followed by word\n");
+        exit();
+      }
+      // Open 't' for reading as file descriptor 0
+      // (which environments use as standard input).
+      // We can't open a file onto a particular descriptor,
+      // so open the file as 'fd',
+      // then check whether 'fd' is 0.
+      // If not, dup 'fd' onto file descriptor 0,
+      // then close the original 'fd'.
 
-        // LAB 11 code
-        if ((fd = open(t, O_RDONLY)) < 0) {
-          cprintf("open %s for read: %i", t, fd);
-          exit();
-        }
-        if (fd != 0) {
-          dup(fd, 0);
-          close(fd);
-        }
-        // LAB 11 code end
-        break;
+      // LAB 11 code
+      if ((fd = open(t, O_RDONLY)) < 0) {
+        cprintf("open %s for read: %i", t, fd);
+        exit();
+      }
+      if (fd != 0) {
+        dup(fd, 0);
+        close(fd);
+      }
+      // LAB 11 code end
+      break;
 
-      case '>': // Output redirection
-        // Grab the filename from the argument list
-        if (gettoken(0, &t) != 'w') {
-          cprintf("syntax error: > not followed by word\n");
-          exit();
-        }
-        if ((fd = open(t, O_WRONLY | O_CREAT | O_TRUNC)) < 0) {
-          cprintf("open %s for write: %i", t, fd);
-          exit();
-        }
-        if (fd != 1) {
-          dup(fd, 1);
-          close(fd);
-        }
-        break;
+    case '>': // Output redirection
+      // Grab the filename from the argument list
+      if (gettoken(0, &t) != 'w') {
+        cprintf("syntax error: > not followed by word\n");
+        exit();
+      }
+      if ((fd = open(t, O_WRONLY | O_CREAT | O_TRUNC)) < 0) {
+        cprintf("open %s for write: %i", t, fd);
+        exit();
+      }
+      if (fd != 1) {
+        dup(fd, 1);
+        close(fd);
+      }
+      break;
 
-      case '|': // Pipe
-        if ((r = pipe(p)) < 0) {
-          cprintf("pipe: %i", r);
-          exit();
-        }
-        if (debug)
-          cprintf("PIPE: %d %d\n", p[0], p[1]);
-        if ((r = fork()) < 0) {
-          cprintf("fork: %i", r);
-          exit();
-        }
-        if (r == 0) {
-          if (p[0] != 0) {
-            dup(p[0], 0);
-            close(p[0]);
-          }
-          close(p[1]);
-          goto again;
-        } else {
-          pipe_child = r;
-          if (p[1] != 1) {
-            dup(p[1], 1);
-            close(p[1]);
-          }
+    case '|': // Pipe
+      if ((r = pipe(p)) < 0) {
+        cprintf("pipe: %i", r);
+        exit();
+      }
+      if (debug)
+        cprintf("PIPE: %d %d\n", p[0], p[1]);
+      if ((r = fork()) < 0) {
+        cprintf("fork: %i", r);
+        exit();
+      }
+      if (r == 0) {
+        if (p[0] != 0) {
+          dup(p[0], 0);
           close(p[0]);
-          goto runit;
         }
-        panic("| not implemented");
-        break;
-
-      case 0: // String is complete
-        // Run the current command!
+        close(p[1]);
+        goto again;
+      } else {
+        pipe_child = r;
+        if (p[1] != 1) {
+          dup(p[1], 1);
+          close(p[1]);
+        }
+        close(p[0]);
         goto runit;
+      }
+      panic("| not implemented");
+      break;
 
-      default:
-        panic("bad return %d from gettoken", c);
-        break;
+    case 0: // String is complete
+      // Run the current command!
+      goto runit;
+
+    default:
+      panic("bad return %d from gettoken", c);
+      break;
     }
   }
 
@@ -186,10 +185,9 @@ runit:
 // Eventually (once we parse the space where the \0 will go),
 // words get nul-terminated.
 #define WHITESPACE " \t\r\n"
-#define SYMBOLS    "<|>&;()"
+#define SYMBOLS "<|>&;()"
 
-int
-_gettoken(char *s, char **p1, char **p2) {
+int _gettoken(char *s, char **p1, char **p2) {
   int t;
 
   if (s == 0) {
@@ -212,10 +210,10 @@ _gettoken(char *s, char **p1, char **p2) {
     return 0;
   }
   if (strchr(SYMBOLS, *s)) {
-    t    = *s;
-    *p1  = s;
+    t = *s;
+    *p1 = s;
     *s++ = 0;
-    *p2  = s;
+    *p2 = s;
     if (debug > 1)
       cprintf("TOK %c\n", t);
     return t;
@@ -225,7 +223,7 @@ _gettoken(char *s, char **p1, char **p2) {
     s++;
   *p2 = s;
   if (debug > 1) {
-    t    = **p2;
+    t = **p2;
     **p2 = 0;
     cprintf("WORD: %s\n", *p1);
     **p2 = t;
@@ -233,8 +231,7 @@ _gettoken(char *s, char **p1, char **p2) {
   return 'w';
 }
 
-int
-gettoken(char *s, char **p1) {
+int gettoken(char *s, char **p1) {
   static int c, nc;
   static char *np1, *np2;
 
@@ -242,38 +239,36 @@ gettoken(char *s, char **p1) {
     nc = _gettoken(s, &np1, &np2);
     return 0;
   }
-  c   = nc;
+  c = nc;
   *p1 = np1;
-  nc  = _gettoken(np2, &np1, &np2);
+  nc = _gettoken(np2, &np1, &np2);
   return c;
 }
 
-void
-usage(void) {
+void usage(void) {
   cprintf("usage: sh [-dix] [command-file]\n");
   exit();
 }
 
-void
-umain(int argc, char **argv) {
+void umain(int argc, char **argv) {
   int r, interactive, echocmds;
   struct Argstate args;
 
   interactive = '?';
-  echocmds    = 0;
+  echocmds = 0;
   argstart(&argc, argv, &args);
   while ((r = argnext(&args)) >= 0)
     switch (r) {
-      case 'd':
-        break;
-      case 'i':
-        interactive = 1;
-        break;
-      case 'x':
-        echocmds = 1;
-        break;
-      default:
-        usage();
+    case 'd':
+      break;
+    case 'i':
+      interactive = 1;
+      break;
+    case 'x':
+      echocmds = 1;
+      break;
+    default:
+      usage();
     }
 
   if (argc > 2)

@@ -18,7 +18,7 @@
 
 #include <stddef.h>
 
-//TODO: It might be a good idea to add more.
+// TODO: It might be a good idea to add more.
 
 /*
  * Sanitized intrinsics

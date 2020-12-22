@@ -1,8 +1,7 @@
 
 #include <inc/lib.h>
 
-void
-umain(int argc, char **argv) {
+void umain(int argc, char **argv) {
   int i, r;
 
   // Spin for a bit to let the console quiet

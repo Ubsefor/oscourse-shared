@@ -3,9 +3,9 @@
 #ifndef JOS_INC_ENV_H
 #define JOS_INC_ENV_H
 
-#include <inc/types.h>
-#include <inc/trap.h>
 #include <inc/memlayout.h>
+#include <inc/trap.h>
+#include <inc/types.h>
 
 typedef int32_t envid_t;
 extern pml4e_t *kern_pml4e;
@@ -27,18 +27,12 @@ extern physaddr_t kern_cr3;
 // envid_ts less than 0 signify errors.  The envid_t == 0 is special, and
 // stands for the current environment.
 
-#define LOG2NENV    10
-#define NENV        (1 << LOG2NENV)
+#define LOG2NENV 10
+#define NENV (1 << LOG2NENV)
 #define ENVX(envid) ((envid) & (NENV - 1))
 
 // Values of env_status in struct Env
-enum {
-  ENV_FREE = 0,
-  ENV_DYING,
-  ENV_RUNNABLE,
-  ENV_RUNNING,
-  ENV_NOT_RUNNABLE
-};
+enum { ENV_FREE = 0, ENV_DYING, ENV_RUNNABLE, ENV_RUNNING, ENV_NOT_RUNNABLE };
 
 // Special environment types
 enum EnvType {

@@ -91,7 +91,7 @@ typedef struct {
   uint64_t MAIN_CNT;
   uint64_t rsv4;
   uint64_t TIM0_CONF;
-#define TIM_CONF       0
+#define TIM_CONF 0
 #define Tn_INT_ENB_CNF 4
   uint64_t TIM0_COMP;
 #define TIM_COMP 8

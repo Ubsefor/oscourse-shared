@@ -1,7 +1,6 @@
 #include <inc/lib.h>
 
-void
-umain(int argc, char **argv) {
+void umain(int argc, char **argv) {
   int p[2], r, pid, i, max;
   void *va;
   struct Fd *fd;
@@ -45,7 +44,7 @@ umain(int argc, char **argv) {
   }
   pid = r;
   cprintf("pid is %d\n", pid);
-  va  = 0;
+  va = 0;
   kid = &envs[ENVX(pid)];
   cprintf("kid is %d\n", (int32_t)(kid - envs));
   dup(p[0], 10);

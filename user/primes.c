@@ -10,8 +10,7 @@
 
 #include <inc/lib.h>
 
-unsigned
-primeproc(void) {
+unsigned primeproc(void) {
   int i, id, p;
   envid_t envid;
 
@@ -34,8 +33,7 @@ top:
   }
 }
 
-void
-umain(int argc, char **argv) {
+void umain(int argc, char **argv) {
   int i, id;
 
   // fork the first prime process in the chain

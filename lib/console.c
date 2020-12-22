@@ -1,9 +1,8 @@
 
-#include <inc/string.h>
 #include <inc/lib.h>
+#include <inc/string.h>
 
-void
-cputchar(int ch) {
+void cputchar(int ch) {
   char c = ch;
 
   // Unlike standard Unix's putchar,
@@ -11,8 +10,7 @@ cputchar(int ch) {
   sys_cputs(&c, 1);
 }
 
-int
-getchar(void) {
+int getchar(void) {
   unsigned char c;
   int r;
 
@@ -36,17 +34,14 @@ static ssize_t devcons_write(struct Fd *, const void *, size_t);
 static int devcons_close(struct Fd *);
 static int devcons_stat(struct Fd *, struct Stat *);
 
-struct Dev devcons =
-    {
-        .dev_id    = 'c',
-        .dev_name  = "cons",
-        .dev_read  = devcons_read,
-        .dev_write = devcons_write,
-        .dev_close = devcons_close,
-        .dev_stat  = devcons_stat};
+struct Dev devcons = {.dev_id = 'c',
+                      .dev_name = "cons",
+                      .dev_read = devcons_read,
+                      .dev_write = devcons_write,
+                      .dev_close = devcons_close,
+                      .dev_stat = devcons_stat};
 
-int
-iscons(int fdnum) {
+int iscons(int fdnum) {
   int r;
   struct Fd *fd;
 
@@ -55,8 +50,7 @@ iscons(int fdnum) {
   return fd->fd_dev_id == devcons.dev_id;
 }
 
-int
-opencons(void) {
+int opencons(void) {
   int r;
   struct Fd *fd;
 
@@ -65,12 +59,11 @@ opencons(void) {
   if ((r = sys_page_alloc(0, fd, PTE_P | PTE_U | PTE_W | PTE_SHARE)) < 0)
     return r;
   fd->fd_dev_id = devcons.dev_id;
-  fd->fd_omode  = O_RDWR;
+  fd->fd_omode = O_RDWR;
   return fd2num(fd);
 }
 
-static ssize_t
-devcons_read(struct Fd *fd, void *vbuf, size_t n) {
+static ssize_t devcons_read(struct Fd *fd, void *vbuf, size_t n) {
   int c;
 
   if (n == 0)
@@ -86,8 +79,7 @@ devcons_read(struct Fd *fd, void *vbuf, size_t n) {
   return 1;
 }
 
-static ssize_t
-devcons_write(struct Fd *fd, const void *vbuf, size_t n) {
+static ssize_t devcons_write(struct Fd *fd, const void *vbuf, size_t n) {
   int tot, m;
   char buf[128];
 
@@ -103,15 +95,13 @@ devcons_write(struct Fd *fd, const void *vbuf, size_t n) {
   return tot;
 }
 
-static int
-devcons_close(struct Fd *fd) {
+static int devcons_close(struct Fd *fd) {
   USED(fd);
 
   return 0;
 }
 
-static int
-devcons_stat(struct Fd *fd, struct Stat *stat) {
+static int devcons_stat(struct Fd *fd, struct Stat *stat) {
   strcpy(stat->st_name, "<cons>");
   return 0;
 }

@@ -1,13 +1,12 @@
 // Ping-pong a counter between two processes.
 // Only need to start one of these -- splits into two, crudely.
 
-#include <inc/string.h>
 #include <inc/lib.h>
+#include <inc/string.h>
 
 envid_t dumbfork(void);
 
-void
-umain(int argc, char **argv) {
+void umain(int argc, char **argv) {
   envid_t who;
   int i;
 
@@ -21,8 +20,7 @@ umain(int argc, char **argv) {
   }
 }
 
-void
-duppage(envid_t dstenv, void *addr) {
+void duppage(envid_t dstenv, void *addr) {
   int r;
 
   // This is NOT what you should do in your fork.
@@ -35,8 +33,7 @@ duppage(envid_t dstenv, void *addr) {
     panic("sys_page_unmap: %i", r);
 }
 
-envid_t
-dumbfork(void) {
+envid_t dumbfork(void) {
   envid_t envid;
   uint8_t *addr;
   int r;

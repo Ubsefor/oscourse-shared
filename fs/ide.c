@@ -7,15 +7,14 @@
 #include "fs.h"
 #include <inc/x86.h>
 
-#define IDE_BSY  0x80
+#define IDE_BSY 0x80
 #define IDE_DRDY 0x40
-#define IDE_DF   0x20
-#define IDE_ERR  0x01
+#define IDE_DF 0x20
+#define IDE_ERR 0x01
 
 static int diskno = 1;
 
-static int
-ide_wait_ready(bool check_error) {
+static int ide_wait_ready(bool check_error) {
   int r;
 
   while (((r = inb(0x1F7)) & (IDE_BSY | IDE_DRDY)) != IDE_DRDY)
@@ -26,8 +25,7 @@ ide_wait_ready(bool check_error) {
   return 0;
 }
 
-bool
-ide_probe_disk1(void) {
+bool ide_probe_disk1(void) {
   int r, x;
 
   // wait for Device 0 to be ready
@@ -38,8 +36,7 @@ ide_probe_disk1(void) {
 
   // check for Device 1 to be ready for a while
   for (x = 0;
-       x < 1000 && ((r = inb(0x1F7)) & (IDE_BSY | IDE_DF | IDE_ERR)) != 0;
-       x++)
+       x < 1000 && ((r = inb(0x1F7)) & (IDE_BSY | IDE_DF | IDE_ERR)) != 0; x++)
     /* do nothing */;
 
   // switch back to Device 0
@@ -49,15 +46,13 @@ ide_probe_disk1(void) {
   return (x < 1000);
 }
 
-void
-ide_set_disk(int d) {
+void ide_set_disk(int d) {
   if (d != 0 && d != 1)
     panic("bad disk number");
   diskno = d;
 }
 
-int
-ide_read(uint32_t secno, void *dst, size_t nsecs) {
+int ide_read(uint32_t secno, void *dst, size_t nsecs) {
   int r;
 
   assert(nsecs <= 256);
@@ -80,8 +75,7 @@ ide_read(uint32_t secno, void *dst, size_t nsecs) {
   return 0;
 }
 
-int
-ide_write(uint32_t secno, const void *src, size_t nsecs) {
+int ide_write(uint32_t secno, const void *src, size_t nsecs) {
   int r;
 
   assert(nsecs <= 256);

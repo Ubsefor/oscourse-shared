@@ -5,8 +5,7 @@ int flag[256];
 void lsdir(const char *, const char *);
 void ls1(const char *, bool, off_t, const char *);
 
-void
-ls(const char *path, const char *prefix) {
+void ls(const char *path, const char *prefix) {
   int r;
   struct Stat st;
 
@@ -18,8 +17,7 @@ ls(const char *path, const char *prefix) {
     ls1(0, st.st_isdir, st.st_size, path);
 }
 
-void
-lsdir(const char *path, const char *prefix) {
+void lsdir(const char *path, const char *prefix) {
   int fd, n;
   struct File f;
 
@@ -34,8 +32,7 @@ lsdir(const char *path, const char *prefix) {
     panic("error reading directory %s: %i", path, n);
 }
 
-void
-ls1(const char *prefix, bool isdir, off_t size, const char *name) {
+void ls1(const char *prefix, bool isdir, off_t size, const char *name) {
   const char *sep;
 
   if (flag['l'])
@@ -53,27 +50,25 @@ ls1(const char *prefix, bool isdir, off_t size, const char *name) {
   printf("\n");
 }
 
-void
-usage(void) {
+void usage(void) {
   printf("usage: ls [-dFl] [file...]\n");
   exit();
 }
 
-void
-umain(int argc, char **argv) {
+void umain(int argc, char **argv) {
   int i;
   struct Argstate args;
 
   argstart(&argc, argv, &args);
   while ((i = argnext(&args)) >= 0)
     switch (i) {
-      case 'd':
-      case 'F':
-      case 'l':
-        flag[i]++;
-        break;
-      default:
-        usage();
+    case 'd':
+    case 'F':
+    case 'l':
+      flag[i]++;
+      break;
+    default:
+      usage();
     }
 
   if (argc == 1)

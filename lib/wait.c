@@ -1,8 +1,7 @@
 #include <inc/lib.h>
 
 // Waits until 'envid' exits.
-void
-wait(envid_t envid) {
+void wait(envid_t envid) {
   const volatile struct Env *e;
 
   assert(envid != 0);

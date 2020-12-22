@@ -2,7 +2,4 @@
 
 #include <inc/lib.h>
 
-void
-umain(int argc, char **argv) {
-  *(volatile unsigned *)0 = 0;
-}
+void umain(int argc, char **argv) { *(volatile unsigned *)0 = 0; }

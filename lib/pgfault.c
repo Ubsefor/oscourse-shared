@@ -20,8 +20,7 @@ void (*_pgfault_handler)(struct UTrapframe *utf);
 // at UXSTACKTOP), and tell the kernel to call the assembly-language
 // _pgfault_upcall routine when a page fault occurs.
 //
-void
-set_pgfault_handler(void (*handler)(struct UTrapframe *utf)) {
+void set_pgfault_handler(void (*handler)(struct UTrapframe *utf)) {
   envid_t envid;
 
   int error;
@@ -38,7 +37,7 @@ set_pgfault_handler(void (*handler)(struct UTrapframe *utf)) {
 
   // Save handler pointer for assembly to call.
   _pgfault_handler = handler;
-  error            = sys_env_set_pgfault_upcall(envid, _pgfault_upcall);
+  error = sys_env_set_pgfault_upcall(envid, _pgfault_upcall);
   if (error < 0)
     panic("set_pgfault_handler: %i", error);
 }

@@ -7,7 +7,7 @@
 #include <inc/string.h>
 
 #include "fs.h"
-
+#define BUFSIZE PGSIZE - sizeof(int) - sizeof(size_t)
 // The file system server maintains three structures
 // for each open file.
 //
@@ -206,13 +206,15 @@ serve_read(envid_t envid, union Fsipc *ipc) {
   if ((r = openfile_lookup(envid, req->req_fileid, &o)) < 0) {
     return r;
   }
+  if (req->req_n > BUFSIZE) {
+    req->req_n = BUFSIZE;
+  }
 
   int count = file_read(o->o_file, ret->ret_buf, req->req_n, o->o_fd->fd_offset);
   if (count > 0) {
     o->o_fd->fd_offset += count;
   }
   return count;
-  // LAB 10 code end
 
   //return -1;
 }
@@ -226,7 +228,7 @@ serve_write(envid_t envid, struct Fsreq_write *req) {
   if (debug)
     cprintf("serve_write %08x %08x %08x\n", envid, req->req_fileid, (uint32_t)req->req_n);
 
-  // LAB 10 code
+  // LAB 10: Your code here.
   struct OpenFile *o;
   int r;
 
@@ -238,7 +240,6 @@ serve_write(envid_t envid, struct Fsreq_write *req) {
     o->o_fd->fd_offset += count;
   }
   return count;
-  // LAB 10 code end
 
   //return -1;
 }

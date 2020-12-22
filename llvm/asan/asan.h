@@ -22,25 +22,25 @@
 typedef uintptr_t uptr;
 
 /* shadow map byte values */
-#define ASAN_VALID          0x00
-#define ASAN_PARTIAL1       0x01
-#define ASAN_PARTIAL2       0x02
-#define ASAN_PARTIAL3       0x03
-#define ASAN_PARTIAL4       0x04
-#define ASAN_PARTIAL5       0x05
-#define ASAN_PARTIAL6       0x06
-#define ASAN_PARTIAL7       0x07
-#define ASAN_ARRAY_COOKIE   0xac
-#define ASAN_STACK_RZ       0xf0
-#define ASAN_STACK_LEFT_RZ  0xf1
-#define ASAN_STACK_MID_RZ   0xf2
+#define ASAN_VALID 0x00
+#define ASAN_PARTIAL1 0x01
+#define ASAN_PARTIAL2 0x02
+#define ASAN_PARTIAL3 0x03
+#define ASAN_PARTIAL4 0x04
+#define ASAN_PARTIAL5 0x05
+#define ASAN_PARTIAL6 0x06
+#define ASAN_PARTIAL7 0x07
+#define ASAN_ARRAY_COOKIE 0xac
+#define ASAN_STACK_RZ 0xf0
+#define ASAN_STACK_LEFT_RZ 0xf1
+#define ASAN_STACK_MID_RZ 0xf2
 #define ASAN_STACK_RIGHT_RZ 0xf3
-#define ASAN_STACK_FREED    0xf5
-#define ASAN_GLOBAL_RZ      0xf9
-#define ASAN_HEAP_RZ        0xe9
-#define ASAN_HEAP_LEFT_RZ   0xfa
-#define ASAN_HEAP_RIGHT_RZ  0xfb
-#define ASAN_HEAP_FREED     0xfd
+#define ASAN_STACK_FREED 0xf5
+#define ASAN_GLOBAL_RZ 0xf9
+#define ASAN_HEAP_RZ 0xe9
+#define ASAN_HEAP_LEFT_RZ 0xfa
+#define ASAN_HEAP_RIGHT_RZ 0xfb
+#define ASAN_HEAP_FREED 0xfd
 
 /* This structure is used to describe the source location of a place where
  * global was defined.
@@ -54,16 +54,16 @@ typedef struct {
 /* This structure describes an instrumented global variable.
  */
 typedef struct {
-  uptr beg;                                // The address of the global.
-  uptr size;                               // The original size of the global.
-  uptr size_with_redzone;                  // The size with the redzone.
-  const char *name;                        // Name as a C string.
-  const char *module_name;                 // Module name as a C string. This pointer is a
-                                           // unique identifier of a module.
-  uptr has_dynamic_init;                   // Non-zero if the global has dynamic initializer.
+  uptr beg;                // The address of the global.
+  uptr size;               // The original size of the global.
+  uptr size_with_redzone;  // The size with the redzone.
+  const char *name;        // Name as a C string.
+  const char *module_name; // Module name as a C string. This pointer is a
+                           // unique identifier of a module.
+  uptr has_dynamic_init;   // Non-zero if the global has dynamic initializer.
   __asan_global_source_location *location; // Source location of a global,
                                            // or NULL if it is unknown.
-  uptr odr_indicator;                      // The address of the ODR indicator symbol.
+  uptr odr_indicator; // The address of the ODR indicator symbol.
 } __asan_global;
 
 /* ASAN callbacks - inserted by the compiler
@@ -126,7 +126,9 @@ void __asan_store16(uptr p);
 void __asan_storeN(uptr p, size_t s);
 void __sanitizer_ptr_sub(uptr a, uptr b);
 void __sanitizer_ptr_cmp(uptr a, uptr b);
-void __sanitizer_annotate_contiguous_container(const void *beg, const void *end, const void *old_mid, const void *new_mid);
+void __sanitizer_annotate_contiguous_container(const void *beg, const void *end,
+                                               const void *old_mid,
+                                               const void *new_mid);
 
 void __asan_set_shadow_00(uptr p, size_t s);
 void __asan_set_shadow_f1(uptr p, size_t s);

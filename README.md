@@ -10,7 +10,7 @@ Andelme: [https://github.com/Andelme/JOS](https://github.com/Andelme/JOS)
 
 Евгений Ростовский [https://github.com/Jeka434/oscourse-2018-msu](https://github.com/Jeka434/oscourse-2018-msu)
 
-Ссылка на форжу: [forge](forge.ispras.ru)
+Ссылка на форжу: [forge](https://forge.ispras.ru/)
 
 Ссылка на книжки, которые мне удалось собрать: [drive](https://drive.google.com/drive/folders/1hnePHc0Zg-uNFLgHzQh0HJg4So9ki1d7?usp=sharing)
 

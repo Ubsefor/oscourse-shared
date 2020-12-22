@@ -12,6 +12,6 @@ Andelme: [https://github.com/Andelme/JOS](https://github.com/Andelme/JOS)
 
 Ссылка на форжу: [forge](forge.ispras.ru)
 
-Ссылка на книжки, которые мне удалось найти: [drive](https://drive.google.com/drive/folders/1hnePHc0Zg-uNFLgHzQh0HJg4So9ki1d7?usp=sharing)
+Ссылка на книжки, которые мне удалось собрать: [drive](https://drive.google.com/drive/folders/1hnePHc0Zg-uNFLgHzQh0HJg4So9ki1d7?usp=sharing)
 
-Остальное кстати есть на диске
+Остальное, кстати есть на диске

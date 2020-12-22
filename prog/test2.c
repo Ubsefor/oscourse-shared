@@ -4,15 +4,16 @@ int (*volatile cprintf)(const char *fmt, ...);
 void (*volatile sys_yield)(void);
 
 #if defined(GRADE3_TEST)
-#define xstr(s) str(s)
-#define str(s) #s
+#define xstr(s)  str(s)
+#define str(s)   #s
 #define xc(a, b) c(a, b)
-#define c(a, b) a##b
+#define c(a, b)  a##b
 void (*volatile GRADE3_FUNC)(unsigned);
 void (*volatile xc(GRADE3_FAIL, GRADE3_PFX1))(void);
 #endif
 
-void umain(int argc, char **argv) {
+void
+umain(int argc, char **argv) {
   int test2_i;
   int test2_j;
 

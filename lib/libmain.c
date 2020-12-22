@@ -12,7 +12,8 @@ const char *binaryname = "<unknown>";
 void (*volatile sys_exit)(void);
 #endif
 
-void libmain(int argc, char **argv) {
+void
+libmain(int argc, char **argv) {
   // Perform global constructor initialisation (e.g. asan)
   // This must be done as early as possible
   extern void (*__ctors_start)();
@@ -24,10 +25,8 @@ void libmain(int argc, char **argv) {
   }
 
   // set thisenv to point at our Env structure in envs[].
-
-  // LAB 8 code
+  // LAB 8: Your code here.
   thisenv = &envs[ENVX(sys_getenvid())];
-  // LAB 8 code end
 
   // save the name of the program so that panic() can use it
   if (argc > 0)

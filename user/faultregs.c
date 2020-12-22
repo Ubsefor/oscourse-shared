@@ -9,58 +9,58 @@ struct regs {
   uintptr_t rsp;
 };
 
-#define SAVE_REGS(base)                                                        \
-  "\tmovq %%r14, 0x8(" base ")\n"                                              \
-  "\tmovq %%r13, 0x10(" base ")\n"                                             \
-  "\tmovq %%r12, 0x18(" base ")\n"                                             \
-  "\tmovq %%r11, 0x20(" base ")\n"                                             \
-  "\tmovq %%r10, 0x28(" base ")\n"                                             \
-  "\tmovq %%r9, 0x30(" base ")\n"                                              \
-  "\tmovq %%r8, 0x38(" base ")\n"                                              \
-  "\tmovq %%rsi, 0x40(" base ")\n"                                             \
-  "\tmovq %%rdi, 0x48(" base ")\n"                                             \
-  "\tmovq %%rbp, 0x50(" base ")\n"                                             \
-  "\tmovq %%rdx, 0x58(" base ")\n"                                             \
-  "\tmovq %%rcx, 0x60(" base ")\n"                                             \
-  "\tmovq %%rbx, 0x68(" base ")\n"                                             \
-  "\tmovq %%rax, 0x70(" base ")\n"                                             \
+#define SAVE_REGS(base)            \
+  "\tmovq %%r14, 0x8(" base ")\n"  \
+  "\tmovq %%r13, 0x10(" base ")\n" \
+  "\tmovq %%r12, 0x18(" base ")\n" \
+  "\tmovq %%r11, 0x20(" base ")\n" \
+  "\tmovq %%r10, 0x28(" base ")\n" \
+  "\tmovq %%r9, 0x30(" base ")\n"  \
+  "\tmovq %%r8, 0x38(" base ")\n"  \
+  "\tmovq %%rsi, 0x40(" base ")\n" \
+  "\tmovq %%rdi, 0x48(" base ")\n" \
+  "\tmovq %%rbp, 0x50(" base ")\n" \
+  "\tmovq %%rdx, 0x58(" base ")\n" \
+  "\tmovq %%rcx, 0x60(" base ")\n" \
+  "\tmovq %%rbx, 0x68(" base ")\n" \
+  "\tmovq %%rax, 0x70(" base ")\n" \
   "\tmovq %%rsp, 0x88(" base ")\n"
 
-#define LOAD_REGS(base)                                                        \
-  "\tmovq 0x8(" base "), %%r14\n"                                              \
-  "\tmovq 0x10(" base "), %%r13\n"                                             \
-  "\tmovq 0x18(" base "), %%r12 \n"                                            \
-  "\tmovq 0x20(" base "), %%r11\n"                                             \
-  "\tmovq 0x28(" base "), %%r10\n"                                             \
-  "\tmovq 0x30(" base "), %%r9\n"                                              \
-  "\tmovq 0x38(" base "), %%r8\n"                                              \
-  "\tmovq 0x40(" base "), %%rsi\n"                                             \
-  "\tmovq 0x48(" base "), %%rdi\n"                                             \
-  "\tmovq 0x50(" base "), %%rbp\n"                                             \
-  "\tmovq 0x58(" base "), %%rdx\n"                                             \
-  "\tmovq 0x60(" base "), %%rcx\n"                                             \
-  "\tmovq 0x68(" base "), %%rbx\n"                                             \
-  "\tmovq 0x70(" base "), %%rax\n"                                             \
+#define LOAD_REGS(base)             \
+  "\tmovq 0x8(" base "), %%r14\n"   \
+  "\tmovq 0x10(" base "), %%r13\n"  \
+  "\tmovq 0x18(" base "), %%r12 \n" \
+  "\tmovq 0x20(" base "), %%r11\n"  \
+  "\tmovq 0x28(" base "), %%r10\n"  \
+  "\tmovq 0x30(" base "), %%r9\n"   \
+  "\tmovq 0x38(" base "), %%r8\n"   \
+  "\tmovq 0x40(" base "), %%rsi\n"  \
+  "\tmovq 0x48(" base "), %%rdi\n"  \
+  "\tmovq 0x50(" base "), %%rbp\n"  \
+  "\tmovq 0x58(" base "), %%rdx\n"  \
+  "\tmovq 0x60(" base "), %%rcx\n"  \
+  "\tmovq 0x68(" base "), %%rbx\n"  \
+  "\tmovq 0x70(" base "), %%rax\n"  \
   "\tmovq 0x88(" base "), %%rsp\n"
 
 static struct regs before, during, after;
 
-static void check_regs(struct regs *a, const char *an, struct regs *b,
-                       const char *bn, const char *testname) {
+static void
+check_regs(struct regs *a, const char *an, struct regs *b, const char *bn,
+           const char *testname) {
   int mismatch = 0;
 
   cprintf("%-6s %-8s %-8s\n", "", an, bn);
 
-#define CHECK(name, field)                                                     \
-  do {                                                                         \
-    cprintf("%-6s %08lx %08lx ", #name, (unsigned long)a->field,               \
-            (unsigned long)b->field);                                          \
-    if (a->field == b->field)                                                  \
-      cprintf("OK\n");                                                         \
-    else {                                                                     \
-      cprintf("MISMATCH\n");                                                   \
-      mismatch = 1;                                                            \
-    }                                                                          \
+#define CHECK(name, field)                                                                 \
+  do {                                                                                     \
+    cprintf("%-6s %08lx %08lx ", #name, (unsigned long)a->field, (unsigned long)b->field); \
+    if (a->field == b->field)                                                              \
+      cprintf("OK\n");                                                                     \
+    else {                                                                                 \
+      cprintf("MISMATCH\n");                                                               \
+      mismatch = 1;                                                                        \
+    }                                                                                      \
   } while (0)
 
   CHECK(r14, regs.reg_r14);
@@ -90,7 +90,8 @@ static void check_regs(struct regs *a, const char *an, struct regs *b,
     cprintf("MISMATCH\n");
 }
 
-static void pgfault(struct UTrapframe *utf) {
+static void
+pgfault(struct UTrapframe *utf) {
   int r;
 
   if (utf->utf_fault_va != (uint64_t)UTEMP)
@@ -98,10 +99,10 @@ static void pgfault(struct UTrapframe *utf) {
           (unsigned long)utf->utf_fault_va, (unsigned long)utf->utf_rip);
 
   // Check registers in UTrapframe
-  during.regs = utf->utf_regs;
-  during.rip = utf->utf_rip;
+  during.regs   = utf->utf_regs;
+  during.rip    = utf->utf_rip;
   during.rflags = utf->utf_rflags & 0xfff;
-  during.rsp = utf->utf_rsp;
+  during.rsp    = utf->utf_rsp;
   check_regs(&before, "before", &during, "during", "in UTrapframe");
   ;
 
@@ -110,7 +111,8 @@ static void pgfault(struct UTrapframe *utf) {
     panic("sys_page_alloc: %i", r);
 }
 
-void umain(int argc, char **argv) {
+void
+umain(int argc, char **argv) {
   set_pgfault_handler(pgfault);
 
   __asm __volatile(

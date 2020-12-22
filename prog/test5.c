@@ -1,6 +1,6 @@
 #include <inc/lib.h>
-#include <inc/random.h>
 #include <inc/x86.h>
+#include <inc/random.h>
 
 int (*volatile cprintf)(const char *fmt, ...);
 void *(*volatile test_alloc)(uint8_t nbytes);
@@ -10,7 +10,8 @@ void (*volatile sys_yield)(void);
 
 unsigned int deep = 0;
 
-void test_rec(void) {
+void
+test_rec(void) {
   void *buf;
   ++deep;
 
@@ -34,7 +35,8 @@ void test_rec(void) {
   return;
 }
 
-void umain(int argc, char **argv) {
+void
+umain(int argc, char **argv) {
   rand_init(4);
   for (;;) {
     test_rec();

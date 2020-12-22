@@ -2,7 +2,8 @@
 
 volatile int counter;
 
-void umain(int argc, char **argv) {
+void
+umain(int argc, char **argv) {
   int i, j;
   envid_t parent = sys_getenvid();
 
@@ -30,6 +31,5 @@ void umain(int argc, char **argv) {
     panic("ran on two CPUs at once (counter is %d)", counter);
 
   // Check that we see environments running on different CPUs
-  // cprintf("[%08x] stresssched on CPU %d\n", thisenv->env_id,
-  // thisenv->env_cpunum);
+  //cprintf("[%08x] stresssched on CPU %d\n", thisenv->env_id, thisenv->env_cpunum);
 }

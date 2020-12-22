@@ -8,7 +8,8 @@
 // Primespipe runs 3x faster this way.
 #define ASM 1
 
-int strlen(const char *s) {
+int
+strlen(const char *s) {
   int n;
 
   for (n = 0; *s != '\0'; s++)
@@ -16,7 +17,8 @@ int strlen(const char *s) {
   return n;
 }
 
-int strnlen(const char *s, size_t size) {
+int
+strnlen(const char *s, size_t size) {
   int n;
 
   for (n = 0; size > 0 && *s != '\0'; s++, size--)
@@ -24,7 +26,8 @@ int strnlen(const char *s, size_t size) {
   return n;
 }
 
-char *strcpy(char *dst, const char *src) {
+char *
+strcpy(char *dst, const char *src) {
   char *ret;
 
   ret = dst;
@@ -33,13 +36,15 @@ char *strcpy(char *dst, const char *src) {
   return ret;
 }
 
-char *strcat(char *dst, const char *src) {
+char *
+strcat(char *dst, const char *src) {
   int len = strlen(dst);
   strcpy(dst + len, src);
   return dst;
 }
 
-char *strncpy(char *dst, const char *src, size_t size) {
+char *
+strncpy(char *dst, const char *src, size_t size) {
   size_t i;
   char *ret;
 
@@ -53,7 +58,8 @@ char *strncpy(char *dst, const char *src, size_t size) {
   return ret;
 }
 
-size_t strlcpy(char *dst, const char *src, size_t size) {
+size_t
+strlcpy(char *dst, const char *src, size_t size) {
   char *dst_in;
 
   dst_in = dst;
@@ -65,7 +71,8 @@ size_t strlcpy(char *dst, const char *src, size_t size) {
   return dst - dst_in;
 }
 
-size_t strlcat(char *restrict dst, const char *restrict src, size_t maxlen) {
+size_t
+strlcat(char *restrict dst, const char *restrict src, size_t maxlen) {
   const size_t srclen = strlen(src);
   const size_t dstlen = strnlen(dst, maxlen);
   if (dstlen == maxlen)
@@ -79,13 +86,15 @@ size_t strlcat(char *restrict dst, const char *restrict src, size_t maxlen) {
   return dstlen + srclen;
 }
 
-int strcmp(const char *p, const char *q) {
+int
+strcmp(const char *p, const char *q) {
   while (*p && *p == *q)
     p++, q++;
   return (int)((unsigned char)*p - (unsigned char)*q);
 }
 
-int strncmp(const char *p, const char *q, size_t n) {
+int
+strncmp(const char *p, const char *q, size_t n) {
   while (n > 0 && *p && *p == *q)
     n--, p++, q++;
   if (n == 0)
@@ -96,7 +105,8 @@ int strncmp(const char *p, const char *q, size_t n) {
 
 // Return a pointer to the first occurrence of 'c' in 's',
 // or a null pointer if the string has no 'c'.
-char *strchr(const char *s, char c) {
+char *
+strchr(const char *s, char c) {
   for (; *s; s++)
     if (*s == c)
       return (char *)s;
@@ -105,7 +115,8 @@ char *strchr(const char *s, char c) {
 
 // Return a pointer to the first occurrence of 'c' in 's',
 // or a pointer to the string-ending null character if the string has no 'c'.
-char *strfind(const char *s, char c) {
+char *
+strfind(const char *s, char c) {
   for (; *s; s++)
     if (*s == c)
       break;
@@ -113,20 +124,23 @@ char *strfind(const char *s, char c) {
 }
 
 #if ASM
-void *memset(void *v, int c, size_t n) {
+void *
+memset(void *v, int c, size_t n) {
   if (n == 0)
     return v;
   if ((int64_t)v % 4 == 0 && n % 4 == 0) {
     uint32_t k = c & 0xFFU;
-    k = (k << 24U) | (k << 16U) | (k << 8U) | k;
+    k          = (k << 24U) | (k << 16U) | (k << 8U) | k;
     asm volatile("cld; rep stosl\n" ::"D"(v), "a"(k), "c"(n / 4)
                  : "cc", "memory");
   } else
-    asm volatile("cld; rep stosb\n" ::"D"(v), "a"(c), "c"(n) : "cc", "memory");
+    asm volatile("cld; rep stosb\n" ::"D"(v), "a"(c), "c"(n)
+                 : "cc", "memory");
   return v;
 }
 
-void *memmove(void *dst, const void *src, size_t n) {
+void *
+memmove(void *dst, const void *src, size_t n) {
   const char *s;
   char *d;
 
@@ -142,7 +156,8 @@ void *memmove(void *dst, const void *src, size_t n) {
       asm volatile("std; rep movsb\n" ::"D"(d - 1), "S"(s - 1), "c"(n)
                    : "cc", "memory");
     // Some versions of GCC rely on DF being clear
-    asm volatile("cld" ::: "cc");
+    asm volatile("cld" ::
+                     : "cc");
   } else {
     if ((int64_t)s % 4 == 0 && (int64_t)d % 4 == 0 && n % 4 == 0)
       asm volatile("cld; rep movsl\n" ::"D"(d), "S"(s), "c"(n / 4)
@@ -156,7 +171,8 @@ void *memmove(void *dst, const void *src, size_t n) {
 
 #else
 
-void *memset(void *v, int c, size_t n) {
+void *
+memset(void *v, int c, size_t n) {
   char *p;
   int m;
 
@@ -168,7 +184,8 @@ void *memset(void *v, int c, size_t n) {
   return v;
 }
 
-void *memmove(void *dst, const void *src, size_t n) {
+void *
+memmove(void *dst, const void *src, size_t n) {
   const char *s;
   char *d;
 
@@ -187,11 +204,13 @@ void *memmove(void *dst, const void *src, size_t n) {
 }
 #endif
 
-void *memcpy(void *dst, const void *src, size_t n) {
+void *
+memcpy(void *dst, const void *src, size_t n) {
   return memmove(dst, src, n);
 }
 
-int memcmp(const void *v1, const void *v2, size_t n) {
+int
+memcmp(const void *v1, const void *v2, size_t n) {
   const uint8_t *s1 = (const uint8_t *)v1;
   const uint8_t *s2 = (const uint8_t *)v2;
 
@@ -204,7 +223,8 @@ int memcmp(const void *v1, const void *v2, size_t n) {
   return 0;
 }
 
-void *memfind(const void *s, int c, size_t n) {
+void *
+memfind(const void *s, int c, size_t n) {
   const void *ends = (const char *)s + n;
   for (; s < ends; s++)
     if (*(const unsigned char *)s == (unsigned char)c)
@@ -212,8 +232,9 @@ void *memfind(const void *s, int c, size_t n) {
   return (void *)s;
 }
 
-long strtol(const char *s, char **endptr, int base) {
-  int neg = 0;
+long
+strtol(const char *s, char **endptr, int base) {
+  int neg  = 0;
   long val = 0;
 
   // gobble initial whitespace

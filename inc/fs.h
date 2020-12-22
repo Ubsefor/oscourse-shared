@@ -3,13 +3,13 @@
 #ifndef JOS_INC_FS_H
 #define JOS_INC_FS_H
 
-#include <inc/mmu.h>
 #include <inc/types.h>
+#include <inc/mmu.h>
 
 // File nodes (both in-memory and on-disk)
 
 // Bytes per file system block - same as page size
-#define BLKSIZE PGSIZE
+#define BLKSIZE    PGSIZE
 #define BLKBITSIZE (BLKSIZE * 8)
 
 // Maximum size of a filename (a single path component), including null

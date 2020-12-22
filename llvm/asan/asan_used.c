@@ -13,8 +13,7 @@
  * See the GNU General Public License version 3 for more details.
  */
 
-// FIXME: This is a very ugly hack currently needed to workaround lld not
-// wrapping
+//FIXME: This is a very ugly hack currently needed to workaround lld not wrapping
 // methods that are only referenced in static libraries. Most likely it is a bug
 // but it is not unlikely that it cannot be easily fixed.
 // If this file is not passed as a separate "asan_used.o" file to the linker
@@ -25,13 +24,15 @@
 
 #include "asan_config.h"
 
-void __attribute__((used)) __attribute__((optnone))
-asan_force_use_wrapped_lib_symbols() {
+void
+    __attribute__((used))
+    __attribute__((optnone))
+    asan_force_use_wrapped_lib_symbols() {
 
-#define USE(x)                                                                 \
-  do {                                                                         \
-    void x();                                                                  \
-    x();                                                                       \
+#define USE(x) \
+  do {         \
+    void x();  \
+    x();       \
   } while (0)
 
 #ifdef PLATFORM_ASAN_HAVE_MEMCPY

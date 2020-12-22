@@ -8,9 +8,9 @@
 
 #include <inc/types.h>
 
-#define CRT_ROWS 25
-#define CRT_COLS 80
-#define CRT_SIZE (CRT_ROWS * CRT_COLS)
+#define CRT_ROWS    25
+#define CRT_COLS    80
+#define CRT_SIZE    (CRT_ROWS * CRT_COLS)
 #define SYMBOL_SIZE 8
 
 void cons_init(void);

@@ -1,7 +1,8 @@
 
 #include <inc/lib.h>
 
-void umain(int argc, char **argv) {
+void
+umain(int argc, char **argv) {
   int p[2], r, i;
   struct Fd *fd;
   const volatile struct Env *kid;

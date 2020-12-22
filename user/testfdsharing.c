@@ -1,9 +1,10 @@
-#include <inc/lib.h>
 #include <inc/x86.h>
+#include <inc/lib.h>
 
 char buf[512], buf2[512];
 
-void umain(int argc, char **argv) {
+void
+umain(int argc, char **argv) {
   int fd, r, n, n2;
 
   if ((fd = open("motd", O_RDONLY)) < 0)
@@ -16,8 +17,7 @@ void umain(int argc, char **argv) {
     panic("fork: %i", r);
   if (r == 0) {
     seek(fd, 0);
-    cprintf(
-        "going to read in child (might page fault if your sharing is buggy)\n");
+    cprintf("going to read in child (might page fault if your sharing is buggy)\n");
     if ((n2 = readn(fd, buf2, sizeof buf2)) != n)
       panic("read in parent got %d, read in child got %d", n, n2);
     if (memcmp(buf, buf2, n) != 0)

@@ -1,5 +1,5 @@
-#include <inc/string.h>
 #include <inc/x86.h>
+#include <inc/string.h>
 
 #include "fs.h"
 
@@ -7,9 +7,13 @@ static char *msg = "This is the NEW message of the day!\n\n";
 
 void check_dir(struct File *dir);
 
-static inline void check_consistency(void) { check_dir(&super->s_root); }
+static inline void
+check_consistency(void) {
+  check_dir(&super->s_root);
+}
 
-void check_dir(struct File *dir) {
+void
+check_dir(struct File *dir) {
   int r, i, j, k;
   uint32_t *blk;
   struct File *files;
@@ -34,8 +38,7 @@ void check_dir(struct File *dir) {
           if (f->f_type == FTYPE_DIR) {
             check_dir(f);
           }
-          if (file_block_walk(f, k, &pdiskbno, 0) < 0 || pdiskbno == NULL ||
-              *pdiskbno == 0) {
+          if (file_block_walk(f, k, &pdiskbno, 0) < 0 || pdiskbno == NULL || *pdiskbno == 0) {
             continue;
           }
           assert(!block_is_free(*pdiskbno));
@@ -45,7 +48,8 @@ void check_dir(struct File *dir) {
   }
 }
 
-void fs_test(void) {
+void
+fs_test(void) {
   struct File *f;
   int r;
   char *blk;

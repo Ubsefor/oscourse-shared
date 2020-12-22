@@ -1,6 +1,7 @@
 #include <inc/lib.h>
 
-void umain(int argc, char **argv) {
+void
+umain(int argc, char **argv) {
   int i, nflag;
 
   nflag = 0;

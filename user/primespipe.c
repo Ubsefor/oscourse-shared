@@ -10,7 +10,8 @@
 
 #include <inc/lib.h>
 
-unsigned primeproc(int fd) {
+unsigned
+primeproc(int fd) {
   int i, id, p, pfd[2], wfd, r;
 
   // fetch a prime from our left neighbor
@@ -45,7 +46,8 @@ top:
   }
 }
 
-void umain(int argc, char **argv) {
+void
+umain(int argc, char **argv) {
   int i, id, p[2], r;
 
   binaryname = "primespipe";

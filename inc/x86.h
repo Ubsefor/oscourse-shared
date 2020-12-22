@@ -5,26 +5,17 @@
 
 static __inline void breakpoint(void) __attribute__((always_inline));
 static __inline uint8_t inb(int port) __attribute__((always_inline));
-static __inline void insb(int port, void *addr, int cnt)
-    __attribute__((always_inline));
+static __inline void insb(int port, void *addr, int cnt) __attribute__((always_inline));
 static __inline uint16_t inw(int port) __attribute__((always_inline));
-static __inline void insw(int port, void *addr, int cnt)
-    __attribute__((always_inline));
+static __inline void insw(int port, void *addr, int cnt) __attribute__((always_inline));
 static __inline uint32_t inl(int port) __attribute__((always_inline));
-static __inline void insl(int port, void *addr, int cnt)
-    __attribute__((always_inline));
-static __inline void outb(int port, uint8_t data)
-    __attribute__((always_inline));
-static __inline void outsb(int port, const void *addr, int cnt)
-    __attribute__((always_inline));
-static __inline void outw(int port, uint16_t data)
-    __attribute__((always_inline));
-static __inline void outsw(int port, const void *addr, int cnt)
-    __attribute__((always_inline));
-static __inline void outsl(int port, const void *addr, int cnt)
-    __attribute__((always_inline));
-static __inline void outl(int port, uint32_t data)
-    __attribute__((always_inline));
+static __inline void insl(int port, void *addr, int cnt) __attribute__((always_inline));
+static __inline void outb(int port, uint8_t data) __attribute__((always_inline));
+static __inline void outsb(int port, const void *addr, int cnt) __attribute__((always_inline));
+static __inline void outw(int port, uint16_t data) __attribute__((always_inline));
+static __inline void outsw(int port, const void *addr, int cnt) __attribute__((always_inline));
+static __inline void outsl(int port, const void *addr, int cnt) __attribute__((always_inline));
+static __inline void outl(int port, uint32_t data) __attribute__((always_inline));
 static __inline void invlpg(void *addr) __attribute__((always_inline));
 static __inline void lidt(void *p) __attribute__((always_inline));
 static __inline void lgdt(void *p) __attribute__((always_inline));
@@ -39,170 +30,245 @@ static __inline void lcr4(uint64_t val) __attribute__((always_inline));
 static __inline uint64_t rcr4(void) __attribute__((always_inline));
 static __inline void tlbflush(void) __attribute__((always_inline));
 static __inline uint64_t read_rflags(void) __attribute__((always_inline));
-static __inline void write_rflags(uint64_t rflags)
-    __attribute__((always_inline));
+static __inline void write_rflags(uint64_t rflags) __attribute__((always_inline));
 static __inline uint64_t read_rbp(void) __attribute__((always_inline));
 static __inline uint64_t read_rsp(void) __attribute__((always_inline));
-static __inline void cpuid(uint32_t info, uint32_t *eaxp, uint32_t *ebxp,
-                           uint32_t *ecxp, uint32_t *edxp);
+static __inline void cpuid(uint32_t info, uint32_t *eaxp, uint32_t *ebxp, uint32_t *ecxp, uint32_t *edxp);
 static __inline uint64_t read_tsc(void) __attribute__((always_inline));
 
-static __inline void breakpoint(void) { __asm __volatile("int3"); }
+static __inline void
+breakpoint(void) {
+  __asm __volatile("int3");
+}
 
-static __inline uint8_t inb(int port) {
+static __inline uint8_t
+inb(int port) {
   uint8_t data;
-  __asm __volatile("inb %w1,%0" : "=a"(data) : "d"(port));
+  __asm __volatile("inb %w1,%0"
+                   : "=a"(data)
+                   : "d"(port));
   return data;
 }
 
-static __inline void insb(int port, void *addr, int cnt) {
+static __inline void
+insb(int port, void *addr, int cnt) {
   __asm __volatile("cld\n\trepne\n\tinsb"
                    : "=D"(addr), "=c"(cnt)
                    : "d"(port), "0"(addr), "1"(cnt)
                    : "memory", "cc");
 }
 
-static __inline uint16_t inw(int port) {
+static __inline uint16_t
+inw(int port) {
   uint16_t data;
-  __asm __volatile("inw %w1,%0" : "=a"(data) : "d"(port));
+  __asm __volatile("inw %w1,%0"
+                   : "=a"(data)
+                   : "d"(port));
   return data;
 }
 
-static __inline void insw(int port, void *addr, int cnt) {
+static __inline void
+insw(int port, void *addr, int cnt) {
   __asm __volatile("cld\n\trepne\n\tinsw"
                    : "=D"(addr), "=c"(cnt)
                    : "d"(port), "0"(addr), "1"(cnt)
                    : "memory", "cc");
 }
 
-static __inline uint32_t inl(int port) {
+static __inline uint32_t
+inl(int port) {
   uint32_t data;
-  __asm __volatile("inl %w1,%0" : "=a"(data) : "d"(port));
+  __asm __volatile("inl %w1,%0"
+                   : "=a"(data)
+                   : "d"(port));
   return data;
 }
 
-static __inline void insl(int port, void *addr, int cnt) {
+static __inline void
+insl(int port, void *addr, int cnt) {
   __asm __volatile("cld\n\trepne\n\tinsl"
                    : "=D"(addr), "=c"(cnt)
                    : "d"(port), "0"(addr), "1"(cnt)
                    : "memory", "cc");
 }
 
-static __inline void outb(int port, uint8_t data) {
-  __asm __volatile("outb %0,%w1" : : "a"(data), "d"(port));
+static __inline void
+outb(int port, uint8_t data) {
+  __asm __volatile("outb %0,%w1"
+                   :
+                   : "a"(data), "d"(port));
 }
 
-static __inline void outsb(int port, const void *addr, int cnt) {
+static __inline void
+outsb(int port, const void *addr, int cnt) {
   __asm __volatile("cld\n\trepne\n\toutsb"
                    : "=S"(addr), "=c"(cnt)
                    : "d"(port), "0"(addr), "1"(cnt)
                    : "cc");
 }
 
-static __inline void outw(int port, uint16_t data) {
-  __asm __volatile("outw %0,%w1" : : "a"(data), "d"(port));
+static __inline void
+outw(int port, uint16_t data) {
+  __asm __volatile("outw %0,%w1"
+                   :
+                   : "a"(data), "d"(port));
 }
 
-static __inline void outsw(int port, const void *addr, int cnt) {
+static __inline void
+outsw(int port, const void *addr, int cnt) {
   __asm __volatile("cld\n\trepne\n\toutsw"
                    : "=S"(addr), "=c"(cnt)
                    : "d"(port), "0"(addr), "1"(cnt)
                    : "cc");
 }
 
-static __inline void outsl(int port, const void *addr, int cnt) {
+static __inline void
+outsl(int port, const void *addr, int cnt) {
   __asm __volatile("cld\n\trepne\n\toutsl"
                    : "=S"(addr), "=c"(cnt)
                    : "d"(port), "0"(addr), "1"(cnt)
                    : "cc");
 }
 
-static __inline void outl(int port, uint32_t data) {
-  __asm __volatile("outl %0,%w1" : : "a"(data), "d"(port));
+static __inline void
+outl(int port, uint32_t data) {
+  __asm __volatile("outl %0,%w1"
+                   :
+                   : "a"(data), "d"(port));
 }
 
-static __inline void invlpg(void *addr) {
-  __asm __volatile("invlpg (%0)" : : "r"(addr) : "memory");
+static __inline void
+invlpg(void *addr) {
+  __asm __volatile("invlpg (%0)"
+                   :
+                   : "r"(addr)
+                   : "memory");
 }
 
-static __inline void lidt(void *p) { __asm __volatile("lidt (%0)" : : "r"(p)); }
-
-static __inline void lldt(uint16_t sel) {
-  __asm __volatile("lldt %0" : : "r"(sel));
+static __inline void
+lidt(void *p) {
+  __asm __volatile("lidt (%0)"
+                   :
+                   : "r"(p));
 }
 
-static __inline void lgdt(void *p) { __asm __volatile("lgdt (%0)" : : "r"(p)); }
-
-static __inline void ltr(uint16_t sel) {
-  __asm __volatile("ltr %0" : : "r"(sel));
+static __inline void
+lldt(uint16_t sel) {
+  __asm __volatile("lldt %0"
+                   :
+                   : "r"(sel));
 }
 
-static __inline void lcr0(uint64_t val) {
-  __asm __volatile("movq %0,%%cr0" : : "r"(val));
+static __inline void
+lgdt(void *p) {
+  __asm __volatile("lgdt (%0)"
+                   :
+                   : "r"(p));
 }
 
-static __inline uint64_t rcr0(void) {
+static __inline void
+ltr(uint16_t sel) {
+  __asm __volatile("ltr %0"
+                   :
+                   : "r"(sel));
+}
+
+static __inline void
+lcr0(uint64_t val) {
+  __asm __volatile("movq %0,%%cr0"
+                   :
+                   : "r"(val));
+}
+
+static __inline uint64_t
+rcr0(void) {
   uint64_t val;
-  __asm __volatile("movq %%cr0,%0" : "=r"(val));
+  __asm __volatile("movq %%cr0,%0"
+                   : "=r"(val));
   return val;
 }
 
-static __inline uint64_t rcr2(void) {
+static __inline uint64_t
+rcr2(void) {
   uint64_t val;
-  __asm __volatile("movq %%cr2,%0" : "=r"(val));
+  __asm __volatile("movq %%cr2,%0"
+                   : "=r"(val));
   return val;
 }
 
-static __inline void lcr3(uint64_t val) {
-  __asm __volatile("movq %0,%%cr3" : : "r"(val));
+static __inline void
+lcr3(uint64_t val) {
+  __asm __volatile("movq %0,%%cr3"
+                   :
+                   : "r"(val));
 }
 
-static __inline uint64_t rcr3(void) {
+static __inline uint64_t
+rcr3(void) {
   uint64_t val;
-  __asm __volatile("movq %%cr3,%0" : "=r"(val));
+  __asm __volatile("movq %%cr3,%0"
+                   : "=r"(val));
   return val;
 }
 
-static __inline void lcr4(uint64_t val) {
-  __asm __volatile("movq %0,%%cr4" : : "r"(val));
+static __inline void
+lcr4(uint64_t val) {
+  __asm __volatile("movq %0,%%cr4"
+                   :
+                   : "r"(val));
 }
 
-static __inline uint64_t rcr4(void) {
+static __inline uint64_t
+rcr4(void) {
   uint64_t cr4;
-  __asm __volatile("movq %%cr4,%0" : "=r"(cr4));
+  __asm __volatile("movq %%cr4,%0"
+                   : "=r"(cr4));
   return cr4;
 }
 
-static __inline void tlbflush(void) {
+static __inline void
+tlbflush(void) {
   uint64_t cr3;
-  __asm __volatile("movq %%cr3,%0" : "=r"(cr3));
-  __asm __volatile("movq %0,%%cr3" : : "r"(cr3));
+  __asm __volatile("movq %%cr3,%0"
+                   : "=r"(cr3));
+  __asm __volatile("movq %0,%%cr3"
+                   :
+                   : "r"(cr3));
 }
 
-static __inline uint64_t read_rflags(void) {
+static __inline uint64_t
+read_rflags(void) {
   uint64_t rflags;
-  __asm __volatile("pushfq; popq %0" : "=r"(rflags));
+  __asm __volatile("pushfq; popq %0"
+                   : "=r"(rflags));
   return rflags;
 }
 
-static __inline void write_rflags(uint64_t rflags) {
-  __asm __volatile("pushq %0; popfq" : : "r"(rflags));
+static __inline void
+write_rflags(uint64_t rflags) {
+  __asm __volatile("pushq %0; popfq"
+                   :
+                   : "r"(rflags));
 }
 
-static __inline uint64_t read_rbp(void) {
+static __inline uint64_t
+read_rbp(void) {
   uint64_t ebp;
-  __asm __volatile("movq %%rbp,%0" : "=r"(ebp));
+  __asm __volatile("movq %%rbp,%0"
+                   : "=r"(ebp));
   return ebp;
 }
 
-static __inline uint64_t read_rsp(void) {
+static __inline uint64_t
+read_rsp(void) {
   uint64_t esp;
-  __asm __volatile("movl %%rsp,%0" : "=r"(esp));
+  __asm __volatile("movl %%rsp,%0"
+                   : "=r"(esp));
   return esp;
 }
 
-static __inline void cpuid(uint32_t info, uint32_t *eaxp, uint32_t *ebxp,
-                           uint32_t *ecxp, uint32_t *edxp) {
+static __inline void
+cpuid(uint32_t info, uint32_t *eaxp, uint32_t *ebxp, uint32_t *ecxp, uint32_t *edxp) {
   uint32_t eax, ebx, ecx, edx;
   asm volatile("cpuid"
                : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx)
@@ -217,15 +283,18 @@ static __inline void cpuid(uint32_t info, uint32_t *eaxp, uint32_t *ebxp,
     *edxp = edx;
 }
 
-static __inline uint64_t read_tsc(void) {
+static __inline uint64_t
+read_tsc(void) {
   uint32_t lo, hi;
   uint64_t res;
-  __asm __volatile("rdtsc" : "=a"(lo), "=d"(hi));
+  __asm __volatile("rdtsc"
+                   : "=a"(lo), "=d"(hi));
   res = (uint64_t)lo | ((uint64_t)hi << 32);
   return res;
 }
 
-static inline uint32_t xchg(volatile uint32_t *addr, uint32_t newval) {
+static inline uint32_t
+xchg(volatile uint32_t *addr, uint32_t newval) {
   uint32_t result;
 
   // The + in "+m" denotes a read-modify-write operand.
@@ -238,8 +307,14 @@ static inline uint32_t xchg(volatile uint32_t *addr, uint32_t newval) {
 
 #define NMI_LOCK 0x80
 
-static inline void nmi_enable(void) { outb(0x70, inb(0x70) & ~NMI_LOCK); }
+static inline void
+nmi_enable(void) {
+  outb(0x70, inb(0x70) & ~NMI_LOCK);
+}
 
-static inline void nmi_disable(void) { outb(0x70, inb(0x70) | NMI_LOCK); }
+static inline void
+nmi_disable(void) {
+  outb(0x70, inb(0x70) | NMI_LOCK);
+}
 
 #endif /* !JOS_INC_X86_H */

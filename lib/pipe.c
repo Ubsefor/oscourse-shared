@@ -5,13 +5,14 @@ static ssize_t devpipe_write(struct Fd *fd, const void *buf, size_t n);
 static int devpipe_stat(struct Fd *fd, struct Stat *stat);
 static int devpipe_close(struct Fd *fd);
 
-struct Dev devpipe = {
-    .dev_id = 'p',
-    .dev_name = "pipe",
-    .dev_read = devpipe_read,
-    .dev_write = devpipe_write,
-    .dev_close = devpipe_close,
-    .dev_stat = devpipe_stat,
+struct Dev devpipe =
+    {
+        .dev_id    = 'p',
+        .dev_name  = "pipe",
+        .dev_read  = devpipe_read,
+        .dev_write = devpipe_write,
+        .dev_close = devpipe_close,
+        .dev_stat  = devpipe_stat,
 };
 
 #define PIPEBUFSIZ 32 // small to provoke races
@@ -22,38 +23,36 @@ struct Pipe {
   uint8_t p_buf[PIPEBUFSIZ]; // data buffer
 };
 
-int pipe(int pfd[2]) {
+int
+pipe(int pfd[2]) {
   int r;
   struct Fd *fd0, *fd1;
   void *va;
 
   // allocate the file descriptor table entries
-  if ((r = fd_alloc(&fd0)) < 0 ||
-      (r = sys_page_alloc(0, fd0, PTE_P | PTE_W | PTE_U | PTE_SHARE)) < 0)
+  if ((r = fd_alloc(&fd0)) < 0 || (r = sys_page_alloc(0, fd0, PTE_P | PTE_W | PTE_U | PTE_SHARE)) < 0)
     goto err;
 
-  if ((r = fd_alloc(&fd1)) < 0 ||
-      (r = sys_page_alloc(0, fd1, PTE_P | PTE_W | PTE_U | PTE_SHARE)) < 0)
+  if ((r = fd_alloc(&fd1)) < 0 || (r = sys_page_alloc(0, fd1, PTE_P | PTE_W | PTE_U | PTE_SHARE)) < 0)
     goto err1;
 
   // allocate the pipe structure as first data page in both
   va = fd2data(fd0);
   if ((r = sys_page_alloc(0, va, PTE_P | PTE_W | PTE_U | PTE_SHARE)) < 0)
     goto err2;
-  if ((r = sys_page_map(0, va, 0, fd2data(fd1),
-                        PTE_P | PTE_W | PTE_U | PTE_SHARE)) < 0)
+  if ((r = sys_page_map(0, va, 0, fd2data(fd1), PTE_P | PTE_W | PTE_U | PTE_SHARE)) < 0)
     goto err3;
 
   // set up fd structures
   fd0->fd_dev_id = devpipe.dev_id;
-  fd0->fd_omode = O_RDONLY;
+  fd0->fd_omode  = O_RDONLY;
 
   fd1->fd_dev_id = devpipe.dev_id;
-  fd1->fd_omode = O_WRONLY;
+  fd1->fd_omode  = O_WRONLY;
 
   if (debug)
-    cprintf("[%08x] pipecreate %08lx\n", thisenv->env_id,
-            (unsigned long)uvpt[PGNUM(va)]);
+    cprintf("[%08x] pipecreate %08lx\n",
+            thisenv->env_id, (unsigned long)uvpt[PGNUM(va)]);
 
   pfd[0] = fd2num(fd0);
   pfd[1] = fd2num(fd1);
@@ -69,22 +68,23 @@ err:
   return r;
 }
 
-static int _pipeisclosed(struct Fd *fd, struct Pipe *p) {
+static int
+_pipeisclosed(struct Fd *fd, struct Pipe *p) {
   int n, nn, ret;
 
   while (1) {
-    n = thisenv->env_runs;
+    n   = thisenv->env_runs;
     ret = pageref(fd) == pageref(p);
-    nn = thisenv->env_runs;
+    nn  = thisenv->env_runs;
     if (n == nn)
       return ret;
     if (n != nn)
-      cprintf("pipe race avoided: runs %d - %d, pageref eq: %d\n", n,
-              thisenv->env_runs, ret);
+      cprintf("pipe race avoided: runs %d - %d, pageref eq: %d\n", n, thisenv->env_runs, ret);
   }
 }
 
-int pipeisclosed(int fdnum) {
+int
+pipeisclosed(int fdnum) {
   struct Fd *fd;
   struct Pipe *p;
   int r;
@@ -95,7 +95,8 @@ int pipeisclosed(int fdnum) {
   return _pipeisclosed(fd, p);
 }
 
-static ssize_t devpipe_read(struct Fd *fd, void *vbuf, size_t n) {
+static ssize_t
+devpipe_read(struct Fd *fd, void *vbuf, size_t n) {
   uint8_t *buf;
   size_t i;
   struct Pipe *p;
@@ -103,8 +104,8 @@ static ssize_t devpipe_read(struct Fd *fd, void *vbuf, size_t n) {
   p = (struct Pipe *)fd2data(fd);
   if (debug)
     cprintf("[%08x] devpipe_read %08lx %lu rpos %ld wpos %ld\n",
-            thisenv->env_id, (unsigned long)uvpt[PGNUM(p)], (unsigned long)n,
-            (long)p->p_rpos, (long)p->p_wpos);
+            thisenv->env_id, (unsigned long)uvpt[PGNUM(p)],
+            (unsigned long)n, (long)p->p_rpos, (long)p->p_wpos);
 
   buf = vbuf;
   for (i = 0; i < n; i++) {
@@ -129,7 +130,8 @@ static ssize_t devpipe_read(struct Fd *fd, void *vbuf, size_t n) {
   return i;
 }
 
-static ssize_t devpipe_write(struct Fd *fd, const void *vbuf, size_t n) {
+static ssize_t
+devpipe_write(struct Fd *fd, const void *vbuf, size_t n) {
   const uint8_t *buf;
   size_t i;
   struct Pipe *p;
@@ -137,8 +139,8 @@ static ssize_t devpipe_write(struct Fd *fd, const void *vbuf, size_t n) {
   p = (struct Pipe *)fd2data(fd);
   if (debug)
     cprintf("[%08x] devpipe_write %08lx %lu rpos %ld wpos %ld\n",
-            thisenv->env_id, (unsigned long)uvpt[PGNUM(p)], (unsigned long)n,
-            (long)p->p_rpos, (long)p->p_wpos);
+            thisenv->env_id, (unsigned long)uvpt[PGNUM(p)],
+            (unsigned long)n, (long)p->p_rpos, (long)p->p_wpos);
 
   buf = vbuf;
   for (i = 0; i < n; i++) {
@@ -163,16 +165,18 @@ static ssize_t devpipe_write(struct Fd *fd, const void *vbuf, size_t n) {
   return i;
 }
 
-static int devpipe_stat(struct Fd *fd, struct Stat *stat) {
+static int
+devpipe_stat(struct Fd *fd, struct Stat *stat) {
   struct Pipe *p = (struct Pipe *)fd2data(fd);
   strcpy(stat->st_name, "<pipe>");
-  stat->st_size = p->p_wpos - p->p_rpos;
+  stat->st_size  = p->p_wpos - p->p_rpos;
   stat->st_isdir = 0;
-  stat->st_dev = &devpipe;
+  stat->st_dev   = &devpipe;
   return 0;
 }
 
-static int devpipe_close(struct Fd *fd) {
+static int
+devpipe_close(struct Fd *fd) {
   (void)sys_page_unmap(0, fd);
   return sys_page_unmap(0, fd2data(fd));
 }

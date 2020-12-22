@@ -2,4 +2,7 @@
 
 #include <inc/lib.h>
 
-void umain(int argc, char **argv) { *(volatile unsigned *)0x8040000000 = 0; }
+void
+umain(int argc, char **argv) {
+  *(volatile unsigned *)0x8040000000 = 0;
+}

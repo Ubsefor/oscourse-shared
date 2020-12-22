@@ -61,11 +61,11 @@ get_time(void) {
     Y = BCD2BIN(Y);
   }
 
-  time.tm_sec = s;
-  time.tm_min = m;
+  time.tm_sec  = s;
+  time.tm_min  = m;
   time.tm_hour = h;
   time.tm_mday = d;
-  time.tm_mon = M - 1;
+  time.tm_mon  = M - 1;
   time.tm_year = y + Y * 100 - 1900;
 
   return timestamp(&time);

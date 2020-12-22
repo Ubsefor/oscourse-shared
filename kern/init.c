@@ -1,25 +1,26 @@
 /* See COPYRIGHT for copyright information. */
 
-#include <inc/assert.h>
-#include <inc/memlayout.h>
 #include <inc/stdio.h>
 #include <inc/string.h>
+#include <inc/assert.h>
 #include <inc/uefi.h>
+#include <inc/memlayout.h>
 
-#include <kern/console.h>
-#include <kern/cpu.h>
-#include <kern/env.h>
-#include <kern/kclock.h>
-#include <kern/kdebug.h>
 #include <kern/monitor.h>
-#include <kern/picirq.h>
+#include <kern/tsc.h>
+#include <kern/console.h>
 #include <kern/pmap.h>
-#include <kern/sched.h>
+#include <kern/env.h>
 #include <kern/timer.h>
 #include <kern/trap.h>
-#include <kern/tsc.h>
+#include <kern/sched.h>
+#include <kern/cpu.h>
+#include <kern/picirq.h>
+#include <kern/kclock.h>
+#include <kern/kdebug.h>
 
-void timers_init(void) {
+void
+timers_init(void) {
   timertab[0] = timer_rtc;
   timertab[1] = timer_pit;
   timertab[2] = timer_acpipm;
@@ -33,10 +34,10 @@ void timers_init(void) {
   }
 }
 
-void timers_schedule(const char *name) {
+void
+timers_schedule(const char *name) {
   for (int i = 0; i < MAX_TIMERS; i++) {
-    if (timertab[i].timer_name != NULL &&
-        strcmp(timertab[i].timer_name, name) == 0) {
+    if (timertab[i].timer_name != NULL && strcmp(timertab[i].timer_name, name) == 0) {
       if (timertab[i].enable_interrupts != NULL) {
         timer_for_schedule = &timertab[i];
         timertab[i].enable_interrupts();
@@ -50,8 +51,9 @@ void timers_schedule(const char *name) {
   panic("Timer %s does not exist\n", name);
 }
 
-pde_t *alloc_pde_early_boot(void) {
-  // Assume pde1, pde2 is already used.
+pde_t *
+alloc_pde_early_boot(void) {
+  //Assume pde1, pde2 is already used.
   extern uintptr_t pdefreestart, pdefreeend;
   pde_t *ret;
   static uintptr_t pdefree = (uintptr_t)&pdefreestart;
@@ -64,22 +66,23 @@ pde_t *alloc_pde_early_boot(void) {
   return ret;
 }
 
-void map_addr_early_boot(uintptr_t addr, uintptr_t addr_phys, size_t sz) {
+void
+map_addr_early_boot(uintptr_t addr, uintptr_t addr_phys, size_t sz) {
   extern uintptr_t pml4phys;
   pml4e_t *pml4 = &pml4phys;
   pdpe_t *pdpt;
   pde_t *pde;
 
   uintptr_t addr_curr, addr_curr_phys, addr_end;
-  addr_curr = ROUNDDOWN(addr, PTSIZE);
+  addr_curr      = ROUNDDOWN(addr, PTSIZE);
   addr_curr_phys = ROUNDDOWN(addr_phys, PTSIZE);
-  addr_end = ROUNDUP(addr + sz, PTSIZE);
+  addr_end       = ROUNDUP(addr + sz, PTSIZE);
 
   pdpt = (pdpe_t *)PTE_ADDR(pml4[PML4(addr_curr)]);
   for (; addr_curr < addr_end; addr_curr += PTSIZE, addr_curr_phys += PTSIZE) {
     pde = (pde_t *)PTE_ADDR(pdpt[PDPE(addr_curr)]);
     if (!pde) {
-      pde = alloc_pde_early_boot();
+      pde                   = alloc_pde_early_boot();
       pdpt[PDPE(addr_curr)] = ((uintptr_t)pde) | PTE_P | PTE_W;
     }
     pde[PDX(addr_curr)] = addr_curr_phys | PTE_P | PTE_W | PTE_MBZ;
@@ -87,25 +90,23 @@ void map_addr_early_boot(uintptr_t addr, uintptr_t addr_phys, size_t sz) {
 }
 // Additionally maps pml4 memory so that we dont get memory errors on accessing
 // uefi_lp, MemMap, KASAN functions.
-void early_boot_pml4_init(void) {
+void
+early_boot_pml4_init(void) {
 
-  map_addr_early_boot((uintptr_t)uefi_lp, (uintptr_t)uefi_lp,
-                      sizeof(LOADER_PARAMS));
-  map_addr_early_boot((uintptr_t)uefi_lp->MemoryMap,
-                      (uintptr_t)uefi_lp->MemoryMap, uefi_lp->MemoryMapSize);
+  map_addr_early_boot((uintptr_t)uefi_lp, (uintptr_t)uefi_lp, sizeof(LOADER_PARAMS));
+  map_addr_early_boot((uintptr_t)uefi_lp->MemoryMap, (uintptr_t)uefi_lp->MemoryMap, uefi_lp->MemoryMapSize);
 
 #ifdef SANITIZE_SHADOW_BASE
-  map_addr_early_boot(SANITIZE_SHADOW_BASE, SANITIZE_SHADOW_BASE - KERNBASE,
-                      SANITIZE_SHADOW_SIZE);
+  map_addr_early_boot(SANITIZE_SHADOW_BASE, SANITIZE_SHADOW_BASE - KERNBASE, SANITIZE_SHADOW_SIZE);
 #endif
 
 #if LAB <= 6
-  map_addr_early_boot(FBUFFBASE, uefi_lp->FrameBufferBase,
-                      uefi_lp->FrameBufferSize);
+  map_addr_early_boot(FBUFFBASE, uefi_lp->FrameBufferBase, uefi_lp->FrameBufferSize);
 #endif
 }
 
-void i386_init(void) {
+void
+i386_init(void) {
   extern char end[];
 
   early_boot_pml4_init();
@@ -134,11 +135,6 @@ void i386_init(void) {
     ctor++;
   }
 
-  // LAB 5 code
-  // pic_init();
-  // rtc_init();
-  // LAB 5 code end
-
 #ifdef SANITIZE_SHADOW_BASE
   kasan_mem_init();
 #endif
@@ -155,17 +151,7 @@ void i386_init(void) {
 
   // choose the timer used for scheduling: hpet or pit
   timers_schedule("hpet0");
-
   clock_idt_init();
-
-  // DELETED in LAB 5
-  // LAB 4 code
-  // pic_init();
-  // rtc_init();
-
-  // размаскирование на контроллере линии IRQ_CLOCK, по которой приходят
-  // прерывания от часов irq_setmask_8259A(~(~irq_mask_8259A | (1 <<
-  // IRQ_CLOCK))); LAB 4 code end DELETED in LAB 5 end
 
 #ifdef CONFIG_KSPACE
   // Touch all you want.
@@ -204,7 +190,8 @@ const char *panicstr = NULL;
  * Panic is called on unresolvable fatal errors.
  * It prints "panic: mesg", and then enters the kernel monitor.
  */
-void _panic(const char *file, int line, const char *fmt, ...) {
+void
+_panic(const char *file, int line, const char *fmt, ...) {
   va_list ap;
 
   if (panicstr)
@@ -227,7 +214,8 @@ dead:
 }
 
 /* like panic, but don't */
-void _warn(const char *file, int line, const char *fmt, ...) {
+void
+_warn(const char *file, int line, const char *fmt, ...) {
   va_list ap;
 
   va_start(ap, fmt);

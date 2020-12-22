@@ -1,12 +1,13 @@
 // Ping-pong a counter between two processes.
 // Only need to start one of these -- splits into two, crudely.
 
-#include <inc/lib.h>
 #include <inc/string.h>
+#include <inc/lib.h>
 
 envid_t dumbfork(void);
 
-void umain(int argc, char **argv) {
+void
+umain(int argc, char **argv) {
   envid_t who;
   int i;
 
@@ -20,7 +21,8 @@ void umain(int argc, char **argv) {
   }
 }
 
-void duppage(envid_t dstenv, void *addr) {
+void
+duppage(envid_t dstenv, void *addr) {
   int r;
 
   // This is NOT what you should do in your fork.
@@ -33,7 +35,8 @@ void duppage(envid_t dstenv, void *addr) {
     panic("sys_page_unmap: %i", r);
 }
 
-envid_t dumbfork(void) {
+envid_t
+dumbfork(void) {
   envid_t envid;
   uint8_t *addr;
   int r;
@@ -44,11 +47,9 @@ envid_t dumbfork(void) {
   // so that the child will appear to have called sys_exofork() too -
   // except that in the child, this "fake" call to sys_exofork()
   // will return 0 instead of the envid of the child.
-
   envid = sys_exofork();
-  if (envid < 0) {
-    panic("sys_exofork: %i\n", envid);
-  }
+  if (envid < 0)
+    panic("sys_exofork: %i", envid);
   if (envid == 0) {
     // We're the child.
     // The copied value of the global variable 'thisenv'

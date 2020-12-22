@@ -6,8 +6,8 @@
 #error "This is a JOS kernel header; user programs should not #include it"
 #endif
 
-#include <inc/assert.h>
 #include <inc/memlayout.h>
+#include <inc/assert.h>
 struct Env;
 
 extern char bootstacktop[], bootstack[];
@@ -24,7 +24,8 @@ extern pde_t *kern_pml4e;
  */
 #define PADDR(kva) _paddr(__FILE__, __LINE__, kva)
 
-static inline physaddr_t _paddr(const char *file, int line, void *kva) {
+static inline physaddr_t
+_paddr(const char *file, int line, void *kva) {
   if ((uint64_t)kva < KERNBASE)
     _panic(file, line, "PADDR called with invalid kva %p", kva);
   return (physaddr_t)kva - KERNBASE;
@@ -33,10 +34,11 @@ static inline physaddr_t _paddr(const char *file, int line, void *kva) {
 /* This macro takes a physical address and returns the corresponding kernel
  * virtual address.  It panics if you pass an invalid physical address. */
 #define KADDR(pa) _kaddr(__FILE__, __LINE__, pa)
-// CAUTION: use only before page detection!
+//CAUTION: use only before page detection!
 #define _KADDR_NOCHECK(pa) (void *)((physaddr_t)pa + KERNBASE)
 
-static inline void *_kaddr(const char *file, int line, physaddr_t pa) {
+static inline void *
+_kaddr(const char *file, int line, physaddr_t pa) {
   if (PGNUM(pa) >= npages)
     _panic(file, line, "KADDR called with invalid pa %p", (void *)pa);
   return (void *)(pa + KERNBASE);
@@ -71,17 +73,18 @@ int page_is_allocated(const struct PageInfo *pp);
 void tlb_invalidate(pml4e_t *pml4e, void *va);
 
 void *mmio_map_region(physaddr_t pa, size_t size);
-void *mmio_remap_last_region(physaddr_t pa, void *addr, size_t oldsize,
-                             size_t newsize);
+void *mmio_remap_last_region(physaddr_t pa, void *addr, size_t oldsize, size_t newsize);
 
 int user_mem_check(struct Env *env, const void *va, size_t len, int perm);
 void user_mem_assert(struct Env *env, const void *va, size_t len, int perm);
 
-static inline physaddr_t page2pa(struct PageInfo *pp) {
+static inline physaddr_t
+page2pa(struct PageInfo *pp) {
   return (pp - pages) << PGSHIFT;
 }
 
-static inline struct PageInfo *pa2page(physaddr_t pa) {
+static inline struct PageInfo *
+pa2page(physaddr_t pa) {
   if (PPN(pa) >= npages) {
     cprintf("accessing %lx\n", (unsigned long)pa);
     panic("pa2page called with invalid pa");
@@ -89,7 +92,10 @@ static inline struct PageInfo *pa2page(physaddr_t pa) {
   return &pages[PPN(pa)];
 }
 
-static inline void *page2kva(struct PageInfo *pp) { return KADDR(page2pa(pp)); }
+static inline void *
+page2kva(struct PageInfo *pp) {
+  return KADDR(page2pa(pp));
+}
 
 pte_t *pgdir_walk(pde_t *pgdir, const void *va, int create);
 

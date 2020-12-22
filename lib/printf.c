@@ -5,10 +5,10 @@
 // It is very important that it always go to the console, especially when
 // debugging file descriptor code!
 
-#include <inc/lib.h>
-#include <inc/stdarg.h>
-#include <inc/stdio.h>
 #include <inc/types.h>
+#include <inc/stdio.h>
+#include <inc/stdarg.h>
+#include <inc/lib.h>
 
 // Collect up to 256 characters into a buffer
 // and perform ONE system call to print all of them,
@@ -21,7 +21,8 @@ struct printbuf {
   char buf[256];
 };
 
-static void putch(int ch, struct printbuf *b) {
+static void
+putch(int ch, struct printbuf *b) {
   b->buf[b->idx++] = ch;
   if (b->idx == 256 - 1) {
     sys_cputs(b->buf, b->idx);
@@ -30,7 +31,8 @@ static void putch(int ch, struct printbuf *b) {
   b->cnt++;
 }
 
-int vcprintf(const char *fmt, va_list ap) {
+int
+vcprintf(const char *fmt, va_list ap) {
   struct printbuf b;
 
   b.idx = 0;
@@ -41,7 +43,8 @@ int vcprintf(const char *fmt, va_list ap) {
   return b.cnt;
 }
 
-int cprintf(const char *fmt, ...) {
+int
+cprintf(const char *fmt, ...) {
   va_list ap;
   int cnt;
 

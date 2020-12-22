@@ -11,7 +11,8 @@ uint16_t irq_mask_8259A = 0xFFFF & ~(1 << IRQ_SLAVE);
 static bool didinit;
 
 /* Initialize the 8259A interrupt controllers. */
-void pic_init(void) {
+void
+pic_init(void) {
   didinit = 1;
 
   // mask all interrupts
@@ -65,7 +66,8 @@ void pic_init(void) {
     irq_setmask_8259A(irq_mask_8259A);
 }
 
-void irq_setmask_8259A(uint16_t mask) {
+void
+irq_setmask_8259A(uint16_t mask) {
   int i;
   irq_mask_8259A = mask;
   if (!didinit)
@@ -79,7 +81,8 @@ void irq_setmask_8259A(uint16_t mask) {
   cprintf("\n");
 }
 
-void pic_send_eoi(uint8_t irq) {
+void
+pic_send_eoi(uint8_t irq) {
   if (irq >= 8)
     outb(IO_PIC2_CMND, PIC_EOI);
   outb(IO_PIC1_CMND, PIC_EOI);

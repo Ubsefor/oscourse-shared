@@ -1,12 +1,12 @@
-#include <inc/elf.h>
 #include <inc/lib.h>
+#include <inc/elf.h>
 
 #define UTEMP2USTACK(addr) ((void *)(addr) + (USTACKTOP - USTACKSIZE) - UTEMP)
 
 // Helper functions for spawn.
 static int init_stack(envid_t child, const char **argv, uintptr_t *init_esp);
-static int map_segment(envid_t child, uintptr_t va, size_t memsz, int fd,
-                       size_t filesz, off_t fileoffset, int perm);
+static int map_segment(envid_t child, uintptr_t va, size_t memsz,
+                       int fd, size_t filesz, off_t fileoffset, int perm);
 static int copy_shared_pages(envid_t child);
 
 // Spawn a child process from a program image loaded from the file system.
@@ -14,7 +14,8 @@ static int copy_shared_pages(envid_t child);
 // argv: pointer to null-terminated array of pointers to strings,
 // 	 which will be passed to the child as its command-line arguments.
 // Returns child envid on success, < 0 on failure.
-int spawn(const char *prog, const char **argv) {
+int
+spawn(const char *prog, const char **argv) {
   unsigned char elf_buf[512];
   struct Trapframe child_tf;
   envid_t child;
@@ -87,8 +88,7 @@ int spawn(const char *prog, const char **argv) {
 
   // Read elf header
   elf = (struct Elf *)elf_buf;
-  if (readn(fd, elf_buf, sizeof(elf_buf)) != sizeof(elf_buf) ||
-      elf->e_magic != ELF_MAGIC) {
+  if (readn(fd, elf_buf, sizeof(elf_buf)) != sizeof(elf_buf) || elf->e_magic != ELF_MAGIC) {
     close(fd);
     cprintf("elf magic %08x want %08x\n", elf->e_magic, ELF_MAGIC);
     return -E_NOT_EXEC;
@@ -100,7 +100,7 @@ int spawn(const char *prog, const char **argv) {
   child = r;
 
   // Set up trap frame, including initial stack.
-  child_tf = envs[ENVX(child)].env_tf;
+  child_tf        = envs[ENVX(child)].env_tf;
   child_tf.tf_rip = elf->e_entry;
 
   if ((r = init_stack(child, argv, &child_tf.tf_rsp)) < 0)
@@ -114,8 +114,8 @@ int spawn(const char *prog, const char **argv) {
     perm = PTE_P | PTE_U;
     if (ph->p_flags & ELF_PROG_FLAG_WRITE)
       perm |= PTE_W;
-    if ((r = map_segment(child, ph->p_va, ph->p_memsz, fd, ph->p_filesz,
-                         ph->p_offset, perm)) < 0)
+    if ((r = map_segment(child, ph->p_va, ph->p_memsz,
+                         fd, ph->p_filesz, ph->p_offset, perm)) < 0)
       goto error;
   }
 
@@ -124,28 +124,24 @@ int spawn(const char *prog, const char **argv) {
                   fd, 0, 0, PTE_P | PTE_U | PTE_W);
   if (r < 0)
     goto error;
-  r = map_segment(child, SANITIZE_USER_STACK_SHADOW_BASE,
-                  SANITIZE_USER_STACK_SHADOW_SIZE, fd, 0, 0,
-                  PTE_P | PTE_U | PTE_W);
+  r = map_segment(child, SANITIZE_USER_STACK_SHADOW_BASE, SANITIZE_USER_STACK_SHADOW_SIZE,
+                  fd, 0, 0, PTE_P | PTE_U | PTE_W);
   if (r < 0)
     goto error;
-  r = map_segment(child, SANITIZE_USER_EXTRA_SHADOW_BASE,
-                  SANITIZE_USER_EXTRA_SHADOW_SIZE, fd, 0, 0,
-                  PTE_P | PTE_U | PTE_W);
+  r = map_segment(child, SANITIZE_USER_EXTRA_SHADOW_BASE, SANITIZE_USER_EXTRA_SHADOW_SIZE,
+                  fd, 0, 0, PTE_P | PTE_U | PTE_W);
   if (r < 0)
     goto error;
-  r = map_segment(child, SANITIZE_USER_FS_SHADOW_BASE,
-                  SANITIZE_USER_FS_SHADOW_SIZE, fd, 0, 0,
-                  PTE_P | PTE_U | PTE_W);
+  r = map_segment(child, SANITIZE_USER_FS_SHADOW_BASE, SANITIZE_USER_FS_SHADOW_SIZE,
+                  fd, 0, 0, PTE_P | PTE_U | PTE_W);
   if (r < 0)
     goto error;
   {
     uintptr_t addr;
-    for (addr = SANITIZE_USER_VPT_SHADOW_BASE;
-         addr < SANITIZE_USER_VPT_SHADOW_BASE + SANITIZE_USER_VPT_SHADOW_SIZE;
+    for (addr = SANITIZE_USER_VPT_SHADOW_BASE; addr < SANITIZE_USER_VPT_SHADOW_BASE +
+                                                          SANITIZE_USER_VPT_SHADOW_SIZE;
          addr += PGSIZE) {
-      r = sys_page_map(0, (void *)addr, child, (void *)addr,
-                       PTE_P | PTE_U | PTE_W);
+      r = sys_page_map(0, (void *)addr, child, (void *)addr, PTE_P | PTE_U | PTE_W);
       if (r < 0)
         goto error;
     }
@@ -176,7 +172,8 @@ error:
 // Spawn, taking command-line arguments array directly on the stack.
 // NOTE: Must have a sentinal of NULL at the end of the args
 // (none of the args may be NULL).
-int spawnl(const char *prog, const char *arg0, ...) {
+int
+spawnl(const char *prog, const char *arg0, ...) {
   // We calculate argc by advancing the args until we hit NULL.
   // The contract of the function guarantees that the last
   // argument will always be NULL, and that none of the other
@@ -191,7 +188,7 @@ int spawnl(const char *prog, const char *arg0, ...) {
   // Now that we have the size of the args, do a second pass
   // and store the values in a VLA, which has the format of argv
   const char *argv[argc + 2];
-  argv[0] = arg0;
+  argv[0]        = arg0;
   argv[argc + 1] = NULL;
 
   va_start(vl, arg0);
@@ -209,7 +206,8 @@ int spawnl(const char *prog, const char *arg0, ...) {
 // On success, returns 0 and sets *init_esp
 // to the initial stack pointer with which the child should start.
 // Returns < 0 on failure.
-static int init_stack(envid_t child, const char **argv, uintptr_t *init_esp) {
+static int
+init_stack(envid_t child, const char **argv, uintptr_t *init_esp) {
   size_t string_size;
   int argc, i, r;
   char *string_store;
@@ -274,9 +272,7 @@ static int init_stack(envid_t child, const char **argv, uintptr_t *init_esp) {
   // After completing the stack, map it into the child's address space
   // and unmap it from ours!
   for (i = 0; i < USTACKSIZE; i += PGSIZE) {
-    if ((r = sys_page_map(0, UTEMP + i, child,
-                          (void *)(USTACKTOP - USTACKSIZE + i),
-                          PTE_P | PTE_U | PTE_W)) < 0)
+    if ((r = sys_page_map(0, UTEMP + i, child, (void *)(USTACKTOP - USTACKSIZE + i), PTE_P | PTE_U | PTE_W)) < 0)
       goto error;
     if ((r = sys_page_unmap(0, UTEMP + i)) < 0)
       goto error;
@@ -290,11 +286,12 @@ error:
   return r;
 }
 
-static int map_segment(envid_t child, uintptr_t va, size_t memsz, int fd,
-                       size_t filesz, off_t fileoffset, int perm) {
+static int
+map_segment(envid_t child, uintptr_t va, size_t memsz,
+            int fd, size_t filesz, off_t fileoffset, int perm) {
   int i, r;
 
-  // cprintf("map_segment %x+%x\n", va, memsz);
+  //cprintf("map_segment %x+%x\n", va, memsz);
 
   if ((i = PGOFF(va))) {
     va -= i;
@@ -325,21 +322,19 @@ static int map_segment(envid_t child, uintptr_t va, size_t memsz, int fd,
 }
 
 // Copy the mappings for shared pages into the child address space.
-static int copy_shared_pages(envid_t child) {
-  // LAB 11 code
+static int
+copy_shared_pages(envid_t child) {
+
   int err = 0;
   for (size_t i = 0; i < UTOP; i += PGSIZE) {
-    if (!(uvpml4e[VPML4E(i)] & PTE_P) || !(uvpde[VPDPE(i)] & PTE_P) ||
-        !(uvpd[VPD(i)] & PTE_P)) {
+    if (!(uvpml4e[VPML4E(i)] & PTE_P) || !(uvpde[VPDPE(i)] & PTE_P) || !(uvpd[VPD(i)] & PTE_P)) {
       continue;
     }
     if ((uvpt[VPN(i)] & (PTE_P | PTE_SHARE)) == (PTE_P | PTE_SHARE)) {
-      err = sys_page_map(0, (void *)i, child, (void *)i,
-                         uvpt[VPN(i)] & PTE_SYSCALL);
+      err = sys_page_map(0, (void *)i, child, (void *)i, uvpt[VPN(i)] & PTE_SYSCALL);
       if (err < 0)
         break;
     }
   }
   return err;
-  // LAB 11 code end
 }

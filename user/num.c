@@ -1,9 +1,10 @@
 #include <inc/lib.h>
 
-int bol = 1;
+int bol  = 1;
 int line = 0;
 
-void num(int f, const char *s) {
+void
+num(int f, const char *s) {
   long n;
   int r;
   char c;
@@ -22,7 +23,8 @@ void num(int f, const char *s) {
     panic("error reading %s: %i", s, (int)n);
 }
 
-void umain(int argc, char **argv) {
+void
+umain(int argc, char **argv) {
   int f, i;
 
   binaryname = "num";
